@@ -1,10 +1,11 @@
-#include<iostream>
-
+#include"webserver.h"
 #include"threadpool.h"
 
 int main()
 {
-	std::cout<<"中文输出测试"<<std::endl;
-	ThreadPool t(10);
+	ThreadPool::init(4);
+	WebServer* web = new WebServer();
+	web->init();
+	web->start();
 	return 0;
 }

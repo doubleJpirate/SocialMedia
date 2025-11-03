@@ -1,56 +1,63 @@
 #include "threadpool.h"
 
 #include<iostream>
+#include<chrono>
 
-ThreadPool::ThreadPool(int threadnum):m_threadnum(threadnum),m_stop(false)
+
+int ThreadPool::p_threadnum = 0;
+std::vector<std::thread> ThreadPool::p_workers;
+std::queue<Task*> ThreadPool::p_tasks;
+std::mutex ThreadPool::p_mutex;
+std::condition_variable ThreadPool::p_condition;
+std::atomic<bool> ThreadPool::p_stop(false);
+
+void ThreadPool::init(int threadnum)
 {
+    p_threadnum = threadnum;
     if(threadnum<=0)
         throw std::invalid_argument("线程数量必须为正数");
     for(int i = 0;i<threadnum;i++)
     {
-        m_workers.emplace_back(&ThreadPool::work,this,i+1);//绑定工作函数
+        p_workers.emplace_back(&ThreadPool::work,i+1);//绑定工作函数
         std::this_thread::sleep_for(std::chrono::microseconds(1000));//确保线程启动
     }
 }
 
+void ThreadPool::addTask(Task *task)
+{
+    std::lock_guard<std::mutex> lock(p_mutex);
+    p_tasks.push(task);
+
+    p_condition.notify_one();
+}
+
 void ThreadPool::work(int id)
 {
-    std::cout<<"线程"<<id<<"已就绪"<<std::endl;
-    while(!m_stop)
+    while(!p_stop)
     {
-        int curTask;//暂时用int替代
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_condition.wait(lock,[this](){
-            return m_stop || !m_tasks.empty();//当线程池未停止运行且任务队列为空时阻塞函数
+        Task* curTask = nullptr;
+        std::unique_lock<std::mutex> lock(p_mutex);
+        p_condition.wait(lock,[&](){
+            return p_stop || !p_tasks.empty();//当线程池未停止运行且任务队列为空时阻塞函数
         });
-        if(m_stop&&m_tasks.empty())break;//当线程池停止且任务队列为空时直接退出函数
-        curTask = m_tasks.front();
-        m_tasks.pop();
+        if(p_stop&&p_tasks.empty())break;//当线程池停止且任务队列为空时直接退出函数
+        curTask = p_tasks.front();
+        p_tasks.pop();
         lock.unlock();
-        std::cout<<"线程"<<id<<"正在处理任务"<<std::endl;
-        //TODO:完成任务主函数
-        std::cout<<"线程"<<id<<"已退出"<<std::endl;
+        if(curTask==nullptr)break;
+        curTask->process();
     }
 }
 
-int ThreadPool::addTask(int task)
+void ThreadPool::stop()
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    m_tasks.push(task);
-
-    m_condition.notify_one();
-    return 0;
-}
-
-ThreadPool::~ThreadPool()
-{
-    m_stop = true;
-    m_condition.notify_all();
-    for(int i = 0;i<m_threadnum;i++)
+    p_stop = true;
+    p_condition.notify_all();
+    for(int i = 0;i<p_threadnum;i++)
     {
-        if(m_workers[i].joinable())
+        if(p_workers[i].joinable())
         {
-            m_workers[i].join();
+            p_workers[i].join();
         }
     }
 }
