@@ -2,6 +2,7 @@
 
 #include<fcntl.h>
 
+//设置非阻塞
 void setNonBlock(int fd)
 {
     int flag = fcntl(fd,F_GETFL);

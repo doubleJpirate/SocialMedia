@@ -2,6 +2,9 @@
 
 #include<sys/epoll.h>
 
+//多个类需要使用的函数
+//设置为全局函数
+
 void setNonBlock(int fd);
 
 void addWaitFd(int epoll,int fd);

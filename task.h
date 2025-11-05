@@ -1,5 +1,6 @@
 #pragma once
 
+//任务基类
 class Task{
 public:
     Task(int ep,int fd):m_epoll(ep),m_fd(fd){
