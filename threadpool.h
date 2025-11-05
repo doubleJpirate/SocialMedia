@@ -12,7 +12,8 @@
 
 //经典生产者消费者模型的线程池
 //用命名空间代替类来实现，让多个文件访问同一个线程池
-namespace ThreadPool{
+namespace ThreadPool
+{
     void init(int num);
     void addTask(Task* task);
     void work(int id);

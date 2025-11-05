@@ -5,7 +5,8 @@
 
 
 // 网络对象，用于处理所有网络事件
-class WebServer{
+class WebServer
+{
 public:
     WebServer();
     void init();
