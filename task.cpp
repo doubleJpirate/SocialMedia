@@ -12,6 +12,7 @@
 
 #include "threadpool.h"
 #include "tools.h"
+#include "database.h"
 
 void ListenTask::process()
 {
@@ -46,7 +47,7 @@ void readTask::process()
         delete this;
         return;
     }
-    // std::cout<<"buf:"<<buf<<std::endl;
+    std::cout<<"buf:"<<buf<<std::endl;
     std::string recvMsg(buf);
     handle(recvMsg);
     delete this;
@@ -94,18 +95,100 @@ void readTask::handle(std::string recvMsg)
     // TODO:后续任务分发
     if(m_method=="GET")
     {
-        Task* task = new writeTask(m_epoll,m_fd);
-        ThreadPool::addTask(task);
+        if(m_path=="/")
+        {
+            Task* task = new writeTask(m_epoll,m_fd,0,0,"");
+            ThreadPool::addTask(task);
+        }
     }
+    else if(m_method=="POST")
+    {
+        if(m_path=="/api/login")
+        {
+            userLogin();
+        }
+        else if(m_path=="/api/register")
+        {
+            std::cout<<"检测到注册"<<std::endl;
+            userRegister();
+        }
+    }
+}
+
+void readTask::userLogin()
+{
+}
+
+void readTask::userRegister()
+{
+    //user:111&email:ttt.com&password:aaa
+    std::string user,email,pwd;
+    int eindex = m_body.find("&email:");
+    user = m_body.substr(5,eindex-5);
+    int pindex = m_body.find("&password:");
+    email = m_body.substr(eindex+7,pindex-eindex-7);
+    pwd = m_body.substr(pindex+10);
+    std::string selsql = "SELECT 1 FROM `User` WHERE username = '"+user+"' OR email = '"+email+"';";
+    auto result = DataBase::getInstance()->executeSQL(selsql.c_str());
+    std::cout<<"通过查询sql"<<std::endl;
+    if(!result.empty())
+    {
+        Task* task = new writeTask(m_epoll,m_fd,1,1,"");
+        ThreadPool::addTask(task);
+        return;
+    }
+    //下面的语句存在sql注入风险，但是只是作为练手项目，暂不考虑这些问题
+    std::string inssql = "INSERT INTO `User` (username, password, email) VALUES ('"+user+"', '"+pwd+"', '"+email+"');";
+    DataBase::getInstance()->executeSQL(inssql.c_str());
+    std::cout<<"通过插入sql"<<std::endl;
+    Task* task = new writeTask(m_epoll,m_fd,1,0,"");
+    ThreadPool::addTask(task);
 }
 
 void writeTask::process()
 {
+    if(m_type==0)sendLoginHtml();
+    else if(m_type==1)sendRegisRes();
+    else if(m_type==2)sendLogRes();
+    delete this;
+}
+
+void writeTask::sendLoginHtml()
+{
     std::ifstream ifs("entry.html", std::ios::binary);
     //将整个文件内容读入到string中
     std::string htmlcontent(std::istreambuf_iterator<char>(ifs),{});//两个参数分别为创建迭代器，默认迭代器
+    ifs.close(); 
     std::string msg = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: "+
         std::to_string(htmlcontent.size())+"\r\n\r\n"+htmlcontent;
     send(m_fd,msg.c_str(), msg.size(), 0);
-    delete this;
+}
+
+void writeTask::sendRegisRes()
+{
+    std::cout<<"开始返回数据"<<std::endl;
+    std::string regisRes,content;
+    if(m_status==0){
+        regisRes+="HTTP/1.1 200 OK\r\n";
+        content = R"({
+    "success": true,
+    "message": "注册成功"
+    })";
+    }
+    else{
+        regisRes+="HTTP/1.1 400 Bad Request\r\n";
+        content = R"({
+  "success": false,
+  "message": "用户名已存在"
+    })";
+    }
+    regisRes+="Content-Type: application/json; charset=utf-8\r\n";
+    regisRes+="Content-Length: "+std::to_string(content.size())+"\r\n\r\n";
+    regisRes+=content;
+    send(m_fd,regisRes.c_str(),regisRes.size(),0);
+    std::cout<<"返回数据完毕"<<std::endl;
+}
+
+void writeTask::sendLogRes()
+{
 }

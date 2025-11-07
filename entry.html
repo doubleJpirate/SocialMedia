@@ -30,6 +30,9 @@
             .btn-effect {
                 @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200;
             }
+            .error-message {
+                @apply text-red-500 text-sm mt-1;
+            }
         }
     </style>
 </head>
@@ -64,6 +67,7 @@
                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
                                    placeholder="请输入" required>
                         </div>
+                        <div id="loginUserError" class="error-message hidden"></div>
                     </div>
 
                     <!-- 密码 -->
@@ -80,10 +84,11 @@
                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
                                    placeholder="请输入" required>
                         </div>
+                        <div id="loginPwdError" class="error-message hidden"></div>
                     </div>
 
                     <!-- 登录按钮 -->
-                    <button type="button" class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg btn-effect">
+                    <button type="button" id="loginBtn" class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg btn-effect">
                         登录
                     </button>
                 </form>
@@ -101,6 +106,7 @@
                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
                                    placeholder="请设置" required>
                         </div>
+                        <div id="regUserError" class="error-message hidden"></div>
                     </div>
 
                     <!-- 邮箱 -->
@@ -114,6 +120,7 @@
                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
                                    placeholder="请输入" required>
                         </div>
+                        <div id="regEmailError" class="error-message hidden"></div>
                     </div>
 
                     <!-- 密码 -->
@@ -127,6 +134,7 @@
                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
                                    placeholder="请设置" required>
                         </div>
+                        <div id="regPwdError" class="error-message hidden"></div>
                     </div>
 
                     <!-- 确认密码 -->
@@ -140,10 +148,11 @@
                                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
                                    placeholder="请再次输入" required>
                         </div>
+                        <div id="regConfirmError" class="error-message hidden"></div>
                     </div>
 
                     <!-- 注册按钮 -->
-                    <button type="button" class="w-full bg-secondary text-white font-medium py-3 px-4 rounded-lg btn-effect">
+                    <button type="button" id="registerBtn" class="w-full bg-secondary text-white font-medium py-3 px-4 rounded-lg btn-effect">
                         注册
                     </button>
                 </form>
@@ -177,6 +186,167 @@
             loginTab.classList.add('text-gray-600');
             registerForm.classList.remove('hidden');
             loginForm.classList.add('hidden');
+        });
+
+        // 清除错误提示
+        function clearErrors(errorElements) {
+            errorElements.forEach(el => {
+                el.textContent = '';
+                el.classList.add('hidden');
+            });
+        }
+
+        // 显示错误提示
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.remove('hidden');
+        }
+
+        // 登录功能
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const userError = document.getElementById('loginUserError');
+            const pwdError = document.getElementById('loginPwdError');
+            
+            // 清除之前的错误提示
+            clearErrors([userError, pwdError]);
+            
+            // 简单验证
+            let isValid = true;
+            if (!username) {
+                showError(userError, '请输入用户名/邮箱');
+                isValid = false;
+            }
+            if (!password) {
+                showError(pwdError, '请输入密码');
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+            
+            try {
+                // 构建 x-www-form-urlencoded 格式数据（与后端解析匹配）
+                const data = new URLSearchParams();
+                data.append('user', username);
+                data.append('password', password);
+                
+                // 发送POST请求
+                const response = await fetch('http://192.168.88.101:19200/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded', // 显式指定格式
+                    },
+                    body: data.toString()
+                });
+                
+                // 处理响应（兼容可能的空响应或解析错误）
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    result = { message: '服务器响应格式错误' };
+                }
+                
+                if (response.ok) {
+                    alert('登录成功！');
+                    console.log('登录成功', result);
+                    // 实际应用中可跳转页面：window.location.href = '/dashboard';
+                } else {
+                    alert(result.message || '登录失败，请检查用户名和密码');
+                }
+            } catch (error) {
+                console.error('登录请求失败:', error);
+                alert('网络错误：' + error.message);
+            }
+        });
+
+        // 注册功能
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const username = document.getElementById('regUsername').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const confirmPwd = document.getElementById('regConfirmPassword').value.trim();
+            
+            // 错误元素
+            const userError = document.getElementById('regUserError');
+            const emailError = document.getElementById('regEmailError');
+            const pwdError = document.getElementById('regPwdError');
+            const confirmError = document.getElementById('regConfirmError');
+            
+            // 清除之前的错误提示
+            clearErrors([userError, emailError, pwdError, confirmError]);
+            
+            // 简单验证
+            let isValid = true;
+            if (!username) {
+                showError(userError, '请设置用户名');
+                isValid = false;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email) {
+                showError(emailError, '请输入邮箱');
+                isValid = false;
+            } else if (!emailRegex.test(email)) {
+                showError(emailError, '请输入有效的邮箱地址');
+                isValid = false;
+            }
+            
+            if (!password) {
+                showError(pwdError, '请设置密码');
+                isValid = false;
+            } else if (password.length < 6) {
+                showError(pwdError, '密码长度不能少于6位');
+                isValid = false;
+            }
+            
+            if (!confirmPwd) {
+                showError(confirmError, '请再次输入密码');
+                isValid = false;
+            } else if (confirmPwd !== password) {
+                showError(confirmError, '两次输入的密码不一致');
+                isValid = false;
+            }
+            
+            if (!isValid) return;
+            
+            try {
+                // 构建 x-www-form-urlencoded 格式数据（与后端解析匹配）
+                const data = new URLSearchParams();
+                data.append('user', username);
+                data.append('email', email);
+                data.append('password', password);
+                
+                // 发送POST请求
+                const response = await fetch('http://192.168.88.101:19200/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded', // 显式指定格式
+                    },
+                    body: data.toString()
+                });
+                
+                // 处理响应（兼容可能的空响应或解析错误）
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    result = { message: '服务器响应格式错误' };
+                }
+                
+                if (response.ok) {
+                    alert('注册成功，请登录！');
+                    console.log('注册成功', result);
+                    // 自动切换到登录表单
+                    loginTab.click();
+                } else {
+                    alert(result.message || '注册失败，请稍后重试');
+                }
+            } catch (error) {
+                console.error('注册请求失败:', error);
+                alert('网络错误：' + error.message);
+            }
         });
     </script>
 </body>

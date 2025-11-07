@@ -6,6 +6,7 @@
 （目前版本几乎没有错误处理）  
 目前实现了tcp连接以及初始登陆页面的展示  
 下一步准备增加登录注册相关接口  
+目前存在比较严重的bug，仍旧没改完
 
 ### 技术栈
 **网络模型** ：Reactor 模型  
@@ -37,15 +38,16 @@ git clone https://github.com/doubleJpirate/SocialMedia.git
 http://[服务器IP地址]:19200
 
 ### 运行环境
-Linux系统
-g++编译器
-MYSQL数据库
+Linux系统  
+g++编译器  
+MYSQL数据库  
 
 ### 其他配置
-默认端口号为19200
-默认MYSQL相关数据 host:localhost user:root pwd:123456 database:SocialMedia
-如需更改，请移步text.cpp文件
-另外需要在mysql中添加SocialMedia数据库和User表
+默认端口号为19200  
+默认MYSQL相关数据 host:localhost user:root pwd:123456 database:SocialMedia  
+如需更改，请移步text.cpp文件  
+需要在mysql中添加SocialMedia数据库和User表  
+**另外，前端代码中的"192.168.88.101"需要更换为运行服务器的ip地址！！！**
 ``` bash
 #进入数据库后执行以下命令
 CREATE DATABASE IF NOT EXISTS `SocialMedia` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -60,7 +62,7 @@ CREATE TABLE `User` (
 
 ### 编译与运行
 ```bash
-g++ -std=c++11 *.cpp -o text -pthread
+g++ -std=c++11 *.cpp -o text -pthread -lmysqlclient
 ./text
 ```
 

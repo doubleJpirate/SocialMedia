@@ -38,6 +38,8 @@ public:
     }
     virtual void process() override;
     void handle(std::string recvMsg);
+    void userLogin();
+    void userRegister();
 
 private:
     std::string m_method;
@@ -50,8 +52,18 @@ private:
 class writeTask : public Task
 {
 public:
-    writeTask(int ep, int fd) : Task(ep, fd)
+    writeTask(int ep, int fd,int type,int status,std::string msg) : Task(ep, fd)
     {
+        m_type = type;
+        m_msg = msg;
+        m_status = status;
     }
     virtual void process() override;
+    void sendLoginHtml();
+    void sendRegisRes();
+    void sendLogRes();
+private:
+    int m_type;
+    int m_status;
+    std::string m_msg;
 };
