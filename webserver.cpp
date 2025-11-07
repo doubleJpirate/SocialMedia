@@ -12,10 +12,10 @@ WebServer::WebServer()
 }
 
 //初始化listen套接字和epoll
-void WebServer::init()
+void WebServer::init(int port)
 {
     //暂时不添加错误检验
-    initSocket();
+    initSocket(port);
     initEpoll();
     addWaitFd(m_epoll,m_listenSocket);
 }
@@ -51,7 +51,7 @@ WebServer::~WebServer()
 {
 }
 
-void WebServer::initSocket()
+void WebServer::initSocket(int port)
 {
     m_listenSocket = socket(AF_INET,SOCK_STREAM,0);
 
@@ -60,7 +60,7 @@ void WebServer::initSocket()
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(19200);
+    addr.sin_port = htons(port);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     bind(m_listenSocket,(sockaddr*)&addr,sizeof(addr));

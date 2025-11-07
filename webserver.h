@@ -9,11 +9,11 @@ class WebServer
 {
 public:
     WebServer();
-    void init();
+    void init(int port);
     void start();
     ~WebServer();
 private:
-    void initSocket();
+    void initSocket(int port);
     void initEpoll();
 private:
     int m_listenSocket;
