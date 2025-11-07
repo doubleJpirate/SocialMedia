@@ -118,6 +118,28 @@ void readTask::userLogin()
 {
     //user=111&password=aaa
     //这里的user实际上还可能是email
+    std::string user,pwd;
+    int pindex = m_body.find("&password=");
+    user = m_body.substr(5,pindex-5);
+    pwd = m_body.substr(pindex+10);
+    std::string selsql = "SELECT id FROM `User` WHERE username = '"+user+"' AND password = '"+pwd+"';";
+    auto result = DataBase::getInstance()->executeSQL(selsql.c_str());
+    if(!result.empty()&&!result["id"].empty())
+    {
+        Task* task = new writeTask(m_epoll,m_fd,2,0,"");
+        ThreadPool::addTask(task);
+        return;
+    }
+    selsql = "SELECT id FROM `User` WHERE email = '"+user+"' AND password = '"+pwd+"';";
+    result = DataBase::getInstance()->executeSQL(selsql.c_str());
+    if(!result.empty()&&!result["id"].empty())
+    {
+        Task* task = new writeTask(m_epoll,m_fd,2,0,"");
+        ThreadPool::addTask(task);
+        return;
+    }
+    Task* task = new writeTask(m_epoll,m_fd,2,1,"");
+    ThreadPool::addTask(task);
 }
 
 void readTask::userRegister()
@@ -188,4 +210,38 @@ void writeTask::sendRegisRes()
 
 void writeTask::sendLogRes()
 {
+    if(m_status){
+        std::string logRes,content;
+        logRes = "HTTP/1.1 401 Unauthorized\r\n";
+        content = "{\"code\":401,\"msg\":\"failed\"}";
+        logRes+="Content-Type: application/json; charset=utf-8\r\n";
+        logRes+="Content-Length: "+std::to_string(content.size())+"\r\n\r\n";
+        logRes+=content;
+        send(m_fd,logRes.c_str(),logRes.size(),0);
+    }
+    else{
+        std::string mainEdge;
+    std::string html = R"(<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>登录成功</title>
+    <style>
+        body { text-align: center; margin-top: 100px; font-family: sans-serif; }
+        h1 { color: green; }
+    </style>
+</head>
+<body>
+    <h1>登录成功</h1>
+    <p>您已成功登录系统</p>
+    <a href="/">回到首页</a>
+</body>
+</html>)";
+    mainEdge += "HTTP/1.1 200 OK\r\n";
+    mainEdge += "Content-Type: text/html; charset=utf-8\r\n";
+    mainEdge += "Content-Length: " + std::to_string(html.size()) + "\r\n\r\n";
+    mainEdge += html;
+
+    send(m_fd, mainEdge.c_str(), mainEdge.size(), 0);
+    }
 }

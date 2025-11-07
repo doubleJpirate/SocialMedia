@@ -202,7 +202,7 @@
             element.classList.remove('hidden');
         }
 
-        // 登录功能
+        // 登录功能（核心修改部分）
         document.getElementById('loginBtn').addEventListener('click', async () => {
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
@@ -226,7 +226,7 @@
             if (!isValid) return;
             
             try {
-                // 构建 x-www-form-urlencoded 格式数据（与后端解析匹配）
+                // 构建 x-www-form-urlencoded 格式数据
                 const data = new URLSearchParams();
                 data.append('user', username);
                 data.append('password', password);
@@ -235,25 +235,22 @@
                 const response = await fetch('http://192.168.88.101:19200/api/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded', // 显式指定格式
+                        'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: data.toString()
                 });
                 
-                // 处理响应（兼容可能的空响应或解析错误）
-                let result;
-                try {
-                    result = await response.json();
-                } catch (e) {
-                    result = { message: '服务器响应格式错误' };
-                }
-                
+                // 登录成功（后端返回HTML页面）
                 if (response.ok) {
-                    alert('登录成功！');
-                    console.log('登录成功', result);
-                    // 实际应用中可跳转页面：window.location.href = '/dashboard';
-                } else {
-                    alert(result.message || '登录失败，请检查用户名和密码');
+                    // 获取后端返回的HTML内容
+                    const html = await response.text();
+                    // 用新HTML替换当前页面内容（更新页面）
+                    document.body.innerHTML = html;
+                } 
+                // 登录失败（后端返回JSON错误信息）
+                else {
+                    const error = await response.json();
+                    alert(error.msg || '登录失败，请检查用户名和密码');
                 }
             } catch (error) {
                 console.error('登录请求失败:', error);
@@ -261,7 +258,7 @@
             }
         });
 
-        // 注册功能
+        // 注册功能（保持不变）
         document.getElementById('registerBtn').addEventListener('click', async () => {
             const username = document.getElementById('regUsername').value.trim();
             const email = document.getElementById('regEmail').value.trim();
@@ -312,7 +309,7 @@
             if (!isValid) return;
             
             try {
-                // 构建 x-www-form-urlencoded 格式数据（与后端解析匹配）
+                // 构建 x-www-form-urlencoded 格式数据
                 const data = new URLSearchParams();
                 data.append('user', username);
                 data.append('email', email);
@@ -322,12 +319,12 @@
                 const response = await fetch('http://192.168.88.101:19200/api/register', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded', // 显式指定格式
+                        'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: data.toString()
                 });
                 
-                // 处理响应（兼容可能的空响应或解析错误）
+                // 处理响应
                 let result;
                 try {
                     result = await response.json();
