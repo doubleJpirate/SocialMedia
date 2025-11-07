@@ -42,18 +42,11 @@ void DataBase::init(const char *host, const char *user, const char *pwd, const c
 std::map<std::string, std::vector<const char *>> DataBase::executeSQL(const char *sql)
 {
     MYSQL* conn = getSQL();
-    if(conn==nullptr)std::cout<<"创建失败aaa"<<std::endl;
-    std::cout<<"创建成功aaa"<<std::endl;
-    if(mysql_ping(conn))std::cout<<"无法连接"<<std::endl;
-    std::cout<<"连接成功"<<std::endl;
     std::map<std::string, std::vector<const char *>> ans;
-    int r = mysql_query(conn,sql);
-    std::cout<<r<<std::endl;
-    std::cerr << "Failed to select database: " << mysql_error(conn) << std::endl;
+    mysql_query(conn,sql);
     MYSQL_RES* res = mysql_store_result(conn);
     if(res!=nullptr)//是查询语句
     {
-        std::cout<<"有结果"<<std::endl;
         MYSQL_FIELD* field;
         while(field = mysql_fetch_field(res))
         {
@@ -70,9 +63,6 @@ std::map<std::string, std::vector<const char *>> DataBase::executeSQL(const char
         }
         mysql_free_result(res);
     }
-    else{
-        std::cout<<"无结果"<<std::endl;
-    }
     {
         std::lock_guard<std::mutex> lock(m_pool_mutex);
         m_sql_pool.push(conn);//用完的MYSQL对象返回到连接池中
@@ -83,10 +73,6 @@ std::map<std::string, std::vector<const char *>> DataBase::executeSQL(const char
 MYSQL *DataBase::createSQL()
 {
     MYSQL* conn = mysql_init(nullptr);
-    if(conn==nullptr){
-        std::cout<<"创建失败"<<std::endl;
-    }
-    std::cout<<"创建成功"<<std::endl;
     mysql_real_connect(conn,m_host,m_user,m_pwd,m_databasename,m_port,m_socket,m_clientFlag);
     m_conn_cnt++;
     return conn;

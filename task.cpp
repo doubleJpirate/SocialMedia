@@ -109,7 +109,6 @@ void readTask::handle(std::string recvMsg)
         }
         else if(m_path=="/api/register")
         {
-            std::cout<<"检测到注册"<<std::endl;
             userRegister();
         }
     }
@@ -117,30 +116,30 @@ void readTask::handle(std::string recvMsg)
 
 void readTask::userLogin()
 {
+    //user=111&password=aaa
+    //这里的user实际上还可能是email
 }
 
 void readTask::userRegister()
 {
-    //user:111&email:ttt.com&password:aaa
+    //user=111&email=ttt.com&password=aaa
     std::string user,email,pwd;
-    int eindex = m_body.find("&email:");
+    int eindex = m_body.find("&email=");
     user = m_body.substr(5,eindex-5);
-    int pindex = m_body.find("&password:");
+    int pindex = m_body.find("&password=");
     email = m_body.substr(eindex+7,pindex-eindex-7);
     pwd = m_body.substr(pindex+10);
-    std::string selsql = "SELECT 1 FROM `User` WHERE username = '"+user+"' OR email = '"+email+"';";
+    std::string selsql = "SELECT id FROM `User` WHERE username = '"+user+"' OR email = '"+email+"';";
     auto result = DataBase::getInstance()->executeSQL(selsql.c_str());
-    std::cout<<"通过查询sql"<<std::endl;
-    if(!result.empty())
+    if(!result.empty()&&!result["id"].empty())
     {
         Task* task = new writeTask(m_epoll,m_fd,1,1,"");
         ThreadPool::addTask(task);
         return;
     }
-    //下面的语句存在sql注入风险，但是只是作为练手项目，暂不考虑这些问题
+    // 下面的语句存在sql注入风险，但是只是作为练手项目，暂不考虑这些问题
     std::string inssql = "INSERT INTO `User` (username, password, email) VALUES ('"+user+"', '"+pwd+"', '"+email+"');";
     DataBase::getInstance()->executeSQL(inssql.c_str());
-    std::cout<<"通过插入sql"<<std::endl;
     Task* task = new writeTask(m_epoll,m_fd,1,0,"");
     ThreadPool::addTask(task);
 }
@@ -166,7 +165,6 @@ void writeTask::sendLoginHtml()
 
 void writeTask::sendRegisRes()
 {
-    std::cout<<"开始返回数据"<<std::endl;
     std::string regisRes,content;
     if(m_status==0){
         regisRes+="HTTP/1.1 200 OK\r\n";
@@ -186,7 +184,6 @@ void writeTask::sendRegisRes()
     regisRes+="Content-Length: "+std::to_string(content.size())+"\r\n\r\n";
     regisRes+=content;
     send(m_fd,regisRes.c_str(),regisRes.size(),0);
-    std::cout<<"返回数据完毕"<<std::endl;
 }
 
 void writeTask::sendLogRes()
