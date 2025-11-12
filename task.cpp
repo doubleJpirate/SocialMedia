@@ -95,19 +95,25 @@ void readTask::handle(std::string recvMsg)
     // TODO:后续任务分发
     if(m_method=="GET")
     {
-        if(m_path=="/")
+        if(m_path=="/")//检测到首页面的get请求
         {
             Task* task = new writeTask(m_epoll,m_fd,0,0,"");
+            ThreadPool::addTask(task);
+        }
+        else if(m_path.substr(0,5)=="/home")
+        {
+            std::cout<<"debug:"<<std::endl;
+            Task* task = new writeTask(m_epoll,m_fd,3,0,"");
             ThreadPool::addTask(task);
         }
     }
     else if(m_method=="POST")
     {
-        if(m_path=="/api/login")
+        if(m_path=="/api/login")//登录请求
         {
             userLogin();
         }
-        else if(m_path=="/api/register")
+        else if(m_path=="/api/register")//注册请求
         {
             userRegister();
         }
@@ -124,20 +130,21 @@ void readTask::userLogin()
     pwd = m_body.substr(pindex+10);
     std::string selsql = "SELECT id FROM `User` WHERE username = '"+user+"' AND password = '"+pwd+"';";
     auto result = DataBase::getInstance()->executeSQL(selsql.c_str());
-    if(!result.empty()&&!result["id"].empty())
+    if(!result.empty()&&!result["id"].empty())//查询到用户名密码相符
     {
-        Task* task = new writeTask(m_epoll,m_fd,2,0,"");
+        Task* task = new writeTask(m_epoll,m_fd,2,0,result["id"][0]);
         ThreadPool::addTask(task);
         return;
     }
     selsql = "SELECT id FROM `User` WHERE email = '"+user+"' AND password = '"+pwd+"';";
     result = DataBase::getInstance()->executeSQL(selsql.c_str());
-    if(!result.empty()&&!result["id"].empty())
+    if(!result.empty()&&!result["id"].empty())//查询到邮箱密码相符
     {
-        Task* task = new writeTask(m_epoll,m_fd,2,0,"");
+        Task* task = new writeTask(m_epoll,m_fd,2,0,result["id"][0]);
         ThreadPool::addTask(task);
         return;
     }
+    //无相符内容
     Task* task = new writeTask(m_epoll,m_fd,2,1,"");
     ThreadPool::addTask(task);
 }
@@ -171,6 +178,7 @@ void writeTask::process()
     if(m_type==0)sendLoginHtml();
     else if(m_type==1)sendRegisRes();
     else if(m_type==2)sendLogRes();
+    else if(m_type==3)sendMainHtml();
     delete this;
 }
 
@@ -220,28 +228,45 @@ void writeTask::sendLogRes()
         send(m_fd,logRes.c_str(),logRes.size(),0);
     }
     else{
-        std::string mainEdge;
+        std::string midEdge;
     std::string html = R"(<!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>登录成功</title>
-    <style>
-        body { text-align: center; margin-top: 100px; font-family: sans-serif; }
-        h1 { color: green; }
-    </style>
-</head>
-<body>
-    <h1>登录成功</h1>
-    <p>您已成功登录系统</p>
-    <a href="/">回到首页</a>
+<body style="background-color: #e6f7ff; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center;">
+    <div style="text-align: center; font-size: 18px; color: #333;">
+        登录成功，正在跳转...
+    </div>
+
+<script>
+const userId = ')"+m_msg+R"(';
+
+// 存储用户ID到本地存储（供新页面使用）
+localStorage.setItem('uid', userId);
+  
+// 1秒后跳转到/home页面，并在URL中携带id参数
+setTimeout(() => {
+  // 对userId进行编码，避免特殊字符导致URL错误
+  const encodedId = encodeURIComponent(userId);
+  window.location.href = `/home?id=${encodedId}`;
+}, 1000);
+</script>
 </body>
 </html>)";
-    mainEdge += "HTTP/1.1 200 OK\r\n";
-    mainEdge += "Content-Type: text/html; charset=utf-8\r\n";
-    mainEdge += "Content-Length: " + std::to_string(html.size()) + "\r\n\r\n";
-    mainEdge += html;
+    midEdge += "HTTP/1.1 200 OK\r\n";
+    midEdge += "Content-Type: text/html; charset=utf-8\r\n";
+    midEdge += "Content-Length: " + std::to_string(html.size()) + "\r\n\r\n";
+    midEdge += html;
 
-    send(m_fd, mainEdge.c_str(), mainEdge.size(), 0);
+    send(m_fd, midEdge.c_str(), midEdge.size(), 0);
     }
+}
+
+void writeTask::sendMainHtml()
+{
+    std::ifstream ifs("mainedge.html", std::ios::binary);
+    //将整个文件内容读入到string中
+    std::string htmlcontent(std::istreambuf_iterator<char>(ifs),{});//两个参数分别为创建迭代器，默认迭代器
+    ifs.close(); 
+    std::string msg = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: "+
+        std::to_string(htmlcontent.size())+"\r\n\r\n"+htmlcontent;
+    send(m_fd,msg.c_str(), msg.size(), 0);
 }

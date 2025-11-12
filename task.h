@@ -37,16 +37,17 @@ public:
     {
     }
     virtual void process() override;
+private:
     void handle(std::string recvMsg);
     void userLogin();
     void userRegister();
 
 private:
-    std::string m_method;
+    std::string m_method;//以下三个为http报文请求头
     std::string m_path;
     std::string m_version;
-    std::unordered_map<std::string, std::string> m_headers;
-    std::string m_body;
+    std::unordered_map<std::string, std::string> m_headers;//请求体哈希表
+    std::string m_body;//主体体
 };
 
 class writeTask : public Task
@@ -59,11 +60,14 @@ public:
         m_status = status;
     }
     virtual void process() override;
+private:
     void sendLoginHtml();
     void sendRegisRes();
     void sendLogRes();
+    void sendMainHtml();
+    
 private:
-    int m_type;
-    int m_status;
-    std::string m_msg;
+    int m_type;//表示回复消息类型
+    int m_status;//表示状态，0为正常
+    std::string m_msg;//存储相关信息
 };

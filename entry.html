@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>登录/注册</title>
-    <!-- 引入外部资源 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
 
-    <!-- 简化Tailwind配置 -->
     <script>
         tailwind.config = {
             theme: {
@@ -39,24 +37,18 @@
 
 <body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
-        <!-- 卡片容器 -->
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <!-- 标题和切换按钮 -->
             <div class="p-6 border-b">
                 <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800 text-center mb-6">登录/注册</h1>
                 
-                <!-- 切换标签 -->
                 <div class="flex rounded-lg overflow-hidden border bg-gray-100">
                     <button id="loginTab" class="flex-1 py-3 px-4 bg-primary text-white font-medium">登录</button>
                     <button id="registerTab" class="flex-1 py-3 px-4 text-gray-600 font-medium">注册</button>
                 </div>
             </div>
 
-            <!-- 表单容器 -->
             <div class="p-6">
-                <!-- 登录表单 -->
                 <form id="loginForm">
-                    <!-- 用户名/邮箱 -->
                     <div class="mb-4">
                         <label for="loginUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名/邮箱</label>
                         <div class="relative">
@@ -70,7 +62,6 @@
                         <div id="loginUserError" class="error-message hidden"></div>
                     </div>
 
-                    <!-- 密码 -->
                     <div class="mb-6">
                         <div class="flex justify-between mb-1">
                             <label for="loginPassword" class="block text-sm font-medium text-gray-700">密码</label>
@@ -87,15 +78,12 @@
                         <div id="loginPwdError" class="error-message hidden"></div>
                     </div>
 
-                    <!-- 登录按钮 -->
                     <button type="button" id="loginBtn" class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg btn-effect">
                         登录
                     </button>
                 </form>
 
-                <!-- 注册表单 (默认隐藏) -->
                 <form id="registerForm" class="hidden">
-                    <!-- 用户名 -->
                     <div class="mb-4">
                         <label for="regUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
                         <div class="relative">
@@ -109,7 +97,6 @@
                         <div id="regUserError" class="error-message hidden"></div>
                     </div>
 
-                    <!-- 邮箱 -->
                     <div class="mb-4">
                         <label for="regEmail" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
                         <div class="relative">
@@ -123,7 +110,6 @@
                         <div id="regEmailError" class="error-message hidden"></div>
                     </div>
 
-                    <!-- 密码 -->
                     <div class="mb-4">
                         <label for="regPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
                         <div class="relative">
@@ -137,7 +123,6 @@
                         <div id="regPwdError" class="error-message hidden"></div>
                     </div>
 
-                    <!-- 确认密码 -->
                     <div class="mb-6">
                         <label for="regConfirmPassword" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
                         <div class="relative">
@@ -151,7 +136,6 @@
                         <div id="regConfirmError" class="error-message hidden"></div>
                     </div>
 
-                    <!-- 注册按钮 -->
                     <button type="button" id="registerBtn" class="w-full bg-secondary text-white font-medium py-3 px-4 rounded-lg btn-effect">
                         注册
                     </button>
@@ -159,12 +143,10 @@
             </div>
         </div>
 
-        <!-- 简化页脚 -->
         <p class="text-center text-gray-500 text-sm mt-6">© 2025 轻量级社交媒体-前端代码由AI生成</p>
     </div>
 
     <script>
-        // 标签切换逻辑
         const loginTab = document.getElementById('loginTab');
         const registerTab = document.getElementById('registerTab');
         const loginForm = document.getElementById('loginForm');
@@ -188,7 +170,6 @@
             loginForm.classList.add('hidden');
         });
 
-        // 清除错误提示
         function clearErrors(errorElements) {
             errorElements.forEach(el => {
                 el.textContent = '';
@@ -196,23 +177,19 @@
             });
         }
 
-        // 显示错误提示
         function showError(element, message) {
             element.textContent = message;
             element.classList.remove('hidden');
         }
 
-        // 登录功能（核心修改部分）
         document.getElementById('loginBtn').addEventListener('click', async () => {
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
             const userError = document.getElementById('loginUserError');
             const pwdError = document.getElementById('loginPwdError');
             
-            // 清除之前的错误提示
             clearErrors([userError, pwdError]);
             
-            // 简单验证
             let isValid = true;
             if (!username) {
                 showError(userError, '请输入用户名/邮箱');
@@ -226,12 +203,10 @@
             if (!isValid) return;
             
             try {
-                // 构建 x-www-form-urlencoded 格式数据
                 const data = new URLSearchParams();
                 data.append('user', username);
                 data.append('password', password);
                 
-                // 发送POST请求
                 const response = await fetch('http://192.168.88.101:19200/api/login', {
                     method: 'POST',
                     headers: {
@@ -240,14 +215,12 @@
                     body: data.toString()
                 });
                 
-                // 登录成功（后端返回HTML页面）
                 if (response.ok) {
-                    // 获取后端返回的HTML内容
                     const html = await response.text();
-                    // 用新HTML替换当前页面内容（更新页面）
-                    document.body.innerHTML = html;
+                    document.open();
+                    document.write(html);
+                    document.close();
                 } 
-                // 登录失败（后端返回JSON错误信息）
                 else {
                     const error = await response.json();
                     alert(error.msg || '登录失败，请检查用户名和密码');
@@ -309,13 +282,11 @@
             if (!isValid) return;
             
             try {
-                // 构建 x-www-form-urlencoded 格式数据
                 const data = new URLSearchParams();
                 data.append('user', username);
                 data.append('email', email);
                 data.append('password', password);
                 
-                // 发送POST请求
                 const response = await fetch('http://192.168.88.101:19200/api/register', {
                     method: 'POST',
                     headers: {
@@ -335,7 +306,6 @@
                 if (response.ok) {
                     alert('注册成功，请登录！');
                     console.log('注册成功', result);
-                    // 自动切换到登录表单
                     loginTab.click();
                 } else {
                     alert(result.message || '注册失败，请稍后重试');
