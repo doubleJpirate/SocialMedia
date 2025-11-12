@@ -127,6 +127,7 @@ void readTask::userLogin()
     std::string user,pwd;
     int pindex = m_body.find("&password=");
     user = m_body.substr(5,pindex-5);
+    user = urlDecode(user);
     pwd = m_body.substr(pindex+10);
     std::string selsql = "SELECT id FROM `User` WHERE username = '"+user+"' AND password = '"+pwd+"';";
     auto result = DataBase::getInstance()->executeSQL(selsql.c_str());
@@ -155,6 +156,7 @@ void readTask::userRegister()
     std::string user,email,pwd;
     int eindex = m_body.find("&email=");
     user = m_body.substr(5,eindex-5);
+    user = urlDecode(user);
     int pindex = m_body.find("&password=");
     email = m_body.substr(eindex+7,pindex-eindex-7);
     pwd = m_body.substr(pindex+10);

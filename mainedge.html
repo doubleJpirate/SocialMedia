@@ -145,7 +145,8 @@
 
         .post-actions {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start; /* 改为左对齐，让按钮挨着 */
+            gap: 20px; /* 点赞和评论之间的间距 */
             padding-top: 10px;
             border-top: 1px solid #f5f5f5;
         }
@@ -431,14 +432,6 @@
                         <i class="far fa-comment"></i>
                         <span>评论(36)</span>
                     </div>
-                    <div class="action-btn">
-                        <i class="far fa-share-square"></i>
-                        <span>转发(15)</span>
-                    </div>
-                    <div class="action-btn">
-                        <i class="far fa-bookmark"></i>
-                        <span>收藏</span>
-                    </div>
                 </div>
             </div>
 
@@ -467,14 +460,6 @@
                         <i class="far fa-comment"></i>
                         <span>评论(24)</span>
                     </div>
-                    <div class="action-btn">
-                        <i class="far fa-share-square"></i>
-                        <span>转发(8)</span>
-                    </div>
-                    <div class="action-btn">
-                        <i class="far fa-bookmark"></i>
-                        <span>收藏</span>
-                    </div>
                 </div>
             </div>
 
@@ -502,14 +487,6 @@
                     <div class="action-btn">
                         <i class="far fa-comment"></i>
                         <span>评论(18)</span>
-                    </div>
-                    <div class="action-btn">
-                        <i class="far fa-share-square"></i>
-                        <span>转发(5)</span>
-                    </div>
-                    <div class="action-btn">
-                        <i class="far fa-bookmark"></i>
-                        <span>收藏</span>
                     </div>
                 </div>
             </div>
