@@ -39,10 +39,11 @@ void DataBase::init(const char *host, const char *user, const char *pwd, const c
 }
 
 
-std::map<std::string, std::vector<const char *>> DataBase::executeSQL(const char *sql)
+std::unordered_map<std::string, std::vector<const char *>> DataBase::executeSQL(const char *sql)
 {
     MYSQL* conn = getSQL();
-    std::map<std::string, std::vector<const char *>> ans;
+    std::unordered_map<std::string, std::vector<const char *>> ans;
+    std::vector<std::string> fields;
     mysql_query(conn,sql);
     MYSQL_RES* res = mysql_store_result(conn);
     if(res!=nullptr)//是查询语句
@@ -50,15 +51,17 @@ std::map<std::string, std::vector<const char *>> DataBase::executeSQL(const char
         MYSQL_FIELD* field;
         while(field = mysql_fetch_field(res))
         {
-            ans[field->name] = std::vector<const char *>();
+            std::string fieldname = field->name;
+            fields.push_back(fieldname);
+            ans[fieldname] = std::vector<const char *>();
         }
         MYSQL_ROW row;
         while(row = mysql_fetch_row(res))
         {
-            size_t i = 0;
-            for(auto it = ans.begin();it!=ans.end();it++)
-            {
-                it->second.emplace_back(row[i++]);
+            for (size_t i = 0; i < fields.size(); ++i) {  // 按fields顺序遍历
+                std::string fieldName = fields[i];  // 第i列的字段名
+                const char* value = row[i] ? row[i] : "";  // 处理NULL
+                ans[fieldName].push_back(value);  // 正确映射：row[i]→该字段的向量
             }
         }
         mysql_free_result(res);

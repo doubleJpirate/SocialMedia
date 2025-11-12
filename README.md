@@ -4,9 +4,8 @@
 
 ### 开发情况
 （目前版本几乎没有错误处理）  
-实现了登陆后一个固定页面的跳转
-目前版本可以通过直接输入url来到这个页面，url还是明文
-下一步进行主要的发送展示消息逻辑进行开发，先不管这些问题
+目前做完了进入主页面后显示消息，以及翻页查询数据库显示消息，包括展示发布者头像功能
+下一步准备完善其他方式查询（关注者消息和自己的消息），或者完善发布功能
 
 ### 技术栈
 **网络模型** ：Reactor 模型  
@@ -47,7 +46,7 @@ MYSQL数据库
 默认MYSQL相关数据 host:localhost user:root pwd:123456 database:SocialMedia  
 如需更改，请移步text.cpp文件  
 需要在mysql中添加SocialMedia数据库和User表  
-**另外，前端代码中的"192.168.88.101"需要更换为运行服务器的ip地址！！！**
+**另外，前端代码中和task中响应报文的"192.168.88.101"需要更换为运行服务器的ip地址！！！**  
 ``` bash
 #进入数据库后执行以下命令
 CREATE DATABASE IF NOT EXISTS `SocialMedia` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -63,10 +62,14 @@ CREATE TABLE `User` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE TABLE `Message`(
     `id`       INT PRIMARY KEY AUTO_INCREMENT,
-    `txt`      TEXT        NOT NULL,
-    `author`   VARCHAR(50) NOT NULL,
+    `txt`      TEXT  NOT NULL,
+    `authorid` INT NOT NULL,
     `likes`    INT DEFAULT 0,
-    `comments` INT DEFAULT 0
+    `comments` INT DEFAULT 0,
+    CONSTRAINT fk_message_author 
+    FOREIGN KEY (`authorid`) 
+    REFERENCES `User`(`id`) 
+    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 

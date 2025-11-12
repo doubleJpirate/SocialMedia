@@ -2,7 +2,7 @@
 
 #include<mysql/mysql.h>
 #include<mutex>
-#include<map>
+#include<unordered_map>
 #include<queue>
 #include<vector>
 #include<utility>
@@ -16,7 +16,7 @@ public:
     static DataBase* getInstance();
     void init(const char* host,const char* user,const char* pwd,const char* databasename,
         unsigned int port = 0,const char* serversocket = nullptr,unsigned long flag = 0);
-    std::map<std::string,std::vector<const char*>> executeSQL(const char* sql);
+    std::unordered_map<std::string,std::vector<const char*>> executeSQL(const char* sql);
 private:
     DataBase(){};
     DataBase(DataBase& oth) = delete;

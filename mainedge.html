@@ -83,7 +83,6 @@
             flex-shrink: 0;
         }
 
-        /* 消息卡片 */
         .post-card {
             background-color: #fff;
             border-radius: 12px;
@@ -116,12 +115,6 @@
             color: #333;
         }
 
-        .post-time {
-            font-size: 12px;
-            color: #999;
-            margin-top: 2px;
-        }
-
         .post-content {
             font-size: 14px;
             line-height: 1.6;
@@ -129,24 +122,10 @@
             color: #333;
         }
 
-        .post-tags {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .tag {
-            font-size: 12px;
-            padding: 3px 10px;
-            border-radius: 12px;
-            background-color: #f0f5ff;
-            color: #2d8cf0;
-        }
-
         .post-actions {
             display: flex;
-            justify-content: flex-start; /* 改为左对齐，让按钮挨着 */
-            gap: 20px; /* 点赞和评论之间的间距 */
+            justify-content: flex-start;
+            gap: 20px;
             padding-top: 10px;
             border-top: 1px solid #f5f5f5;
         }
@@ -159,93 +138,16 @@
             color: #666;
             padding: 5px 10px;
             border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .comments-section {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #eee;
-            display: none;
+        .action-btn.liked {
+            color: #f53f3f;
         }
 
-        .comments-title {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .comment-item {
-            display: flex;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #f9f9f9;
-        }
-
-        .comment-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-
-        .comment-content {
-            flex: 1;
-        }
-
-        .comment-author {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
-
-        .comment-text {
-            font-size: 13px;
-            color: #333;
-            line-height: 1.5;
-        }
-
-        .comment-time {
-            font-size: 11px;
-            color: #999;
-            margin-top: 4px;
-        }
-
-        .comment-actions {
-            display: flex;
-            gap: 15px;
-            margin-top: 5px;
-            font-size: 12px;
-            color: #999;
-        }
-
-        .add-comment {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .add-comment-input {
-            flex: 1;
-            height: 36px;
-            padding: 0 12px;
-            border: 1px solid #eee;
-            border-radius: 18px;
-            outline: none;
-            font-size: 13px;
-        }
-
-        .send-comment {
-            width: 60px;
-            height: 36px;
-            background-color: #2d8cf0;
-            color: white;
-            border: none;
-            border-radius: 18px;
-            font-size: 13px;
+        .action-btn:hover {
+            background-color: #f5f5f5;
         }
 
         .sidebar-card {
@@ -356,12 +258,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
             .page-btn.active {
                 background-color: #2d8cf0;
                 color: white;
                 border-color: #2d8cf0;
+            }
+
+            .page-btn:hover:not(.active) {
+                border-color: #2d8cf0;
+                color: #2d8cf0;
             }
 
         .page-prev, .page-next {
@@ -374,6 +283,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-prev:hover, .page-next:hover {
+            border-color: #2d8cf0;
+            color: #2d8cf0;
         }
 
         @media (max-width: 768px) {
@@ -406,90 +322,7 @@
     </header>
 
     <div class="main">
-        <div class="content">
-            <div class="post-card">
-                <div class="post-header">
-                    <img src="https://picsum.photos/id/237/200" alt="作者头像" class="post-avatar">
-                    <div class="post-author">
-                        <div class="author-name">山野君</div>
-                        <div class="post-time">2小时前</div>
-                    </div>
-                </div>
-                <div class="post-content">
-                    今天去徒步了！山顶的风景真的绝了，推荐大家有空多去户外走走！大自然的治愈力果然最棒～
-                </div>
-                <div class="post-tags">
-                    <div class="tag">#徒步</div>
-                    <div class="tag">#户外</div>
-                    <div class="tag">#旅行</div>
-                </div>
-                <div class="post-actions">
-                    <div class="action-btn">
-                        <i class="far fa-heart"></i>
-                        <span>点赞(128)</span>
-                    </div>
-                    <div class="action-btn">
-                        <i class="far fa-comment"></i>
-                        <span>评论(36)</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="post-card">
-                <div class="post-header">
-                    <img src="https://picsum.photos/id/177/200" alt="作者头像" class="post-avatar">
-                    <div class="post-author">
-                        <div class="author-name">代码诗人</div>
-                        <div class="post-time">5小时前</div>
-                    </div>
-                </div>
-                <div class="post-content">
-                    分享一个练手项目的小技巧：做社交媒体项目时，前端可以先写静态页面再对接接口，这样能更专注于UI和交互逻辑～ 大家有什么练手心得欢迎交流！
-                </div>
-                <div class="post-tags">
-                    <div class="tag">#编程</div>
-                    <div class="tag">#前端</div>
-                    <div class="tag">#练手项目</div>
-                </div>
-                <div class="post-actions">
-                    <div class="action-btn">
-                        <i class="far fa-heart"></i>
-                        <span>点赞(92)</span>
-                    </div>
-                    <div class="action-btn">
-                        <i class="far fa-comment"></i>
-                        <span>评论(24)</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="post-card">
-                <div class="post-header">
-                    <img src="https://picsum.photos/id/338/200" alt="作者头像" class="post-avatar">
-                    <div class="post-author">
-                        <div class="author-name">咖啡爱好者</div>
-                        <div class="post-time">昨天</div>
-                    </div>
-                </div>
-                <div class="post-content">
-                    尝试了一款新的手冲咖啡，来自埃塞俄比亚的耶加雪菲，柑橘风味非常明显，酸度适中，回甘很好。推荐给喜欢浅烘咖啡的朋友！
-                </div>
-                <div class="post-tags">
-                    <div class="tag">#咖啡</div>
-                    <div class="tag">#手冲</div>
-                    <div class="tag">#耶加雪菲</div>
-                </div>
-                <div class="post-actions">
-                    <div class="action-btn">
-                        <i class="far fa-heart"></i>
-                        <span>点赞(76)</span>
-                    </div>
-                    <div class="action-btn">
-                        <i class="far fa-comment"></i>
-                        <span>评论(18)</span>
-                    </div>
-                </div>
-            </div>
+        <div class="content" id="contentContainer">
         </div>
 
         <div class="sidebar">
@@ -550,18 +383,156 @@
         </ul>
     </div>
 
-    <div class="pagination">
-        <button class="page-prev">
+    <div class="pagination" id="paginationContainer">
+        <button class="page-prev" id="prevBtn">
             <i class="fas fa-chevron-left"></i>
         </button>
-        <button class="page-btn active">1</button>
-        <button class="page-btn">2</button>
-        <button class="page-btn">3</button>
-        <button class="page-btn">4</button>
-        <button class="page-btn">5</button>
-        <button class="page-next">
+        <button class="page-next" id="nextBtn">
             <i class="fas fa-chevron-right"></i>
         </button>
     </div>
+
+    <script>
+        let currentPage = 1;
+        const maxPageButtons = 5;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchPosts(currentPage);
+        });
+
+        async function fetchPosts(page) {
+            try {
+                const response = await fetch('http://192.168.88.101:19200/api/find', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `page=${page}`
+                });
+
+                if (!response.ok) {
+                    throw new Error('请求失败');
+                }
+
+                const result = await response.json();
+                renderPosts(result.data);
+                renderPagination(result.totalPages, page);
+            } catch (error) {
+                console.error('获取数据失败:', error);
+                renderPosts([
+                    {
+                        author: "示例用户",
+                        avatar: "https://picsum.photos/id/237/200",
+                        content: "数据加载失败，这是示例内容",
+                        likes: 20,
+                        comments: 5
+                    }
+                ]);
+            }
+        }
+
+        function renderPosts(posts) {
+            const container = document.getElementById('contentContainer');
+            container.innerHTML = '';
+
+            if (posts.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;">暂无数据</div>';
+                return;
+            }
+
+            posts.forEach(post => {
+                const postCard = document.createElement('div');
+                postCard.className = 'post-card';
+                postCard.innerHTML = `
+                    <div class="post-header">
+                        <img src="${post.avatar}" alt="${post.author}的头像" class="post-avatar">
+                        <div class="post-author">
+                            <div class="author-name">${post.author}</div>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        ${post.content}
+                    </div>
+                    <div class="post-actions">
+                        <div class="action-btn like-btn" data-likes="${post.likes}">
+                            <i class="far fa-heart"></i>
+                            <span>点赞(${post.likes})</span>
+                        </div>
+                        <div class="action-btn comment-btn">
+                            <i class="far fa-comment"></i>
+                            <span>评论(${post.comments})</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(postCard);
+            });
+
+            bindLikeEvents();
+        }
+
+        function bindLikeEvents() {
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const icon = this.querySelector('i');
+                    const text = this.querySelector('span');
+                    let likes = parseInt(this.dataset.likes);
+
+                    if (icon.classList.contains('far')) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        this.classList.add('liked');
+                        likes++;
+                    } else {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                        this.classList.remove('liked');
+                        likes--;
+                    }
+
+                    this.dataset.likes = likes;
+                    text.textContent = `点赞(${likes})`;
+                });
+            });
+        }
+
+        function renderPagination(totalPages, currentPage) {
+            const paginationContainer = document.getElementById('paginationContainer');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            const existingPageBtns = paginationContainer.querySelectorAll('.page-btn');
+            existingPageBtns.forEach(btn => btn.remove());
+
+            for (let i = 1; i <= Math.min(totalPages, maxPageButtons); i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.addEventListener('click', () => {
+                    currentPage = i;
+                    fetchPosts(currentPage);
+                });
+                paginationContainer.insertBefore(pageBtn, nextBtn);
+            }
+
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    fetchPosts(currentPage);
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    fetchPosts(currentPage);
+                }
+            });
+
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+            prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+            nextBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+        }
+    </script>
 </body>
 </html>

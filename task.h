@@ -41,6 +41,7 @@ private:
     void handle(std::string recvMsg);
     void userLogin();
     void userRegister();
+    void findMsg();
 
 private:
     std::string m_method;//以下三个为http报文请求头
@@ -65,6 +66,8 @@ private:
     void sendRegisRes();
     void sendLogRes();
     void sendMainHtml();
+    void sendFindMsg();
+    void sendImg();
     
 private:
     int m_type;//表示回复消息类型

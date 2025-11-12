@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <sstream>
 #include <fstream>
+#include <string>
 
 #include "threadpool.h"
 #include "tools.h"
@@ -102,8 +103,12 @@ void readTask::handle(std::string recvMsg)
         }
         else if(m_path.substr(0,5)=="/home")
         {
-            std::cout<<"debug:"<<std::endl;
             Task* task = new writeTask(m_epoll,m_fd,3,0,"");
+            ThreadPool::addTask(task);
+        }
+        else if(m_path.substr(0,4)=="/img")
+        {
+            Task* task = new writeTask(m_epoll,m_fd,5,0,m_path.substr(4));
             ThreadPool::addTask(task);
         }
     }
@@ -116,6 +121,10 @@ void readTask::handle(std::string recvMsg)
         else if(m_path=="/api/register")//注册请求
         {
             userRegister();
+        }
+        else if(m_path=="/api/find")
+        {
+            findMsg();
         }
     }
 }
@@ -175,12 +184,80 @@ void readTask::userRegister()
     ThreadPool::addTask(task);
 }
 
+void readTask::findMsg()
+{
+    //page=...
+    std::string page = m_body.substr(5);
+    int npage = std::stoi(page);
+    //查询消息总数量
+    std::string sql = "select count(*) as cnt from Message";
+    auto res = DataBase::getInstance()->executeSQL(sql.c_str());
+    std::string s(res["cnt"][0]);
+    int cnt = std::stoi(s);
+    //向上取整分页
+    int allpage = cnt/3+(cnt%3!=0);
+    //每三组数据分为一组，查询第page组数据
+    sql = "SELECT username,headimg,txt,likes,comments FROM `Message` m LEFT JOIN `User` u ON m.authorid = u.id ORDER BY m.id DESC LIMIT 3 OFFSET "+std::to_string((npage-1)*3)+";";
+    res = DataBase::getInstance()->executeSQL(sql.c_str());
+
+    std::string backMsg = "{\n\"data\":[\n";
+    // 返回数据示例
+    //     {
+    //   "data": [
+    //     {
+    //       "author": "测试",
+    //       "avatar": "/img/test.png",
+    //       "content": "周末去了这家餐厅，味道超赞",
+    //       "likes": 76,
+    //       "comments": 12
+    //     },
+    //     {
+    //       "author": "是一对J",
+    //       "avatar": "/img/user1.png",
+    //       "content": "大家有什么好的健身方法推荐吗？",
+    //       "likes": 33,
+    //       "comments": 9
+    //     }
+    //   ],
+    //   "totalPages": 5  // 总页数仍为5，前端分页按钮不变
+    //    }
+    int n = res["username"].size();
+    for(int i = 0;i<n;i++)
+    {
+        backMsg+="{\n\"author\": \"";
+        backMsg+=res["username"][i];
+        backMsg+="\",\n";
+        backMsg+="\"avatar\": \"";
+        backMsg+="http://192.168.88.101:19200";//需更换为实际服务器ip
+        backMsg+=res["headimg"][i];
+        backMsg+="\",\n";
+        backMsg+="\"content\": \"";
+        backMsg+=res["txt"][i];
+        backMsg+="\",\n";
+        backMsg+="\"likes\": ";
+        backMsg+=res["likes"][i];
+        backMsg+=",\n";
+        backMsg+="\"comments\": ";
+        backMsg+=res["comments"][i];
+        backMsg+="\n";
+        backMsg+="}";
+        if(i!=n-1)backMsg+=",";
+        backMsg+="\n";
+    }
+    backMsg+="],\n\"totalPages\": "+std::to_string(allpage)+"\n}";
+
+    Task* task = new writeTask(m_epoll,m_fd,4,0,backMsg);
+    ThreadPool::addTask(task);
+}
+
 void writeTask::process()
 {
     if(m_type==0)sendLoginHtml();
     else if(m_type==1)sendRegisRes();
     else if(m_type==2)sendLogRes();
     else if(m_type==3)sendMainHtml();
+    else if(m_type==4)sendFindMsg();
+    else if(m_type==5)sendImg();
     delete this;
 }
 
@@ -241,12 +318,9 @@ void writeTask::sendLogRes()
 <script>
 const userId = ')"+m_msg+R"(';
 
-// 存储用户ID到本地存储（供新页面使用）
 localStorage.setItem('uid', userId);
   
-// 1秒后跳转到/home页面，并在URL中携带id参数
 setTimeout(() => {
-  // 对userId进行编码，避免特殊字符导致URL错误
   const encodedId = encodeURIComponent(userId);
   window.location.href = `/home?id=${encodedId}`;
 }, 1000);
@@ -271,4 +345,30 @@ void writeTask::sendMainHtml()
     std::string msg = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: "+
         std::to_string(htmlcontent.size())+"\r\n\r\n"+htmlcontent;
     send(m_fd,msg.c_str(), msg.size(), 0);
+}
+
+void writeTask::sendFindMsg()
+{
+    std::string httpmsg = "HTTP/1.1 200 OK\r\nContent-Type: application/json; charset=utf-8\r\nContent-Length: ";
+    httpmsg+=std::to_string(m_msg.size());
+    httpmsg+="\r\n\r\n";
+    httpmsg+=m_msg;
+
+    send(m_fd,httpmsg.c_str(),httpmsg.size(),0);
+}
+
+void writeTask::sendImg()
+{
+    std::string path = "./img"+m_msg;//注意相对路径
+    std::cout<<path<<std::endl;
+    std::ifstream file(path, std::ios::binary);  // 二进制方式读取图片
+    // 读取文件内容到字符串
+    std::string content((std::istreambuf_iterator<char>(file)), 
+                        std::istreambuf_iterator<char>());
+    std::string response = "HTTP/1.1 200 OK\r\n";
+    response += "Content-Type: image/png\r\n";
+    response += "Content-Length: " + std::to_string(content.size()) + "\r\n";
+    response += "\r\n";
+    response += content;
+    send(m_fd, response.c_str(), response.size(), 0);
 }
