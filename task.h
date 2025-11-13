@@ -42,6 +42,8 @@ private:
     void userLogin();
     void userRegister();
     void findMsg();
+    void attentionMsg();
+    void myMsg();
 
 private:
     std::string m_method;//以下三个为http报文请求头

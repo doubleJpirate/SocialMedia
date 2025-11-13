@@ -126,6 +126,14 @@ void readTask::handle(std::string recvMsg)
         {
             findMsg();
         }
+        else if(m_path=="/api/attention")
+        {
+            attentionMsg();
+        }
+        else if(m_path=="/api/mypost")
+        {
+            myMsg();
+        }
     }
 }
 
@@ -221,6 +229,96 @@ void readTask::findMsg()
     //   ],
     //   "totalPages": 5  // 总页数仍为5，前端分页按钮不变
     //    }
+    int n = res["username"].size();
+    for(int i = 0;i<n;i++)
+    {
+        backMsg+="{\n\"author\": \"";
+        backMsg+=res["username"][i];
+        backMsg+="\",\n";
+        backMsg+="\"avatar\": \"";
+        backMsg+="http://192.168.88.101:19200";//需更换为实际服务器ip
+        backMsg+=res["headimg"][i];
+        backMsg+="\",\n";
+        backMsg+="\"content\": \"";
+        backMsg+=res["txt"][i];
+        backMsg+="\",\n";
+        backMsg+="\"likes\": ";
+        backMsg+=res["likes"][i];
+        backMsg+=",\n";
+        backMsg+="\"comments\": ";
+        backMsg+=res["comments"][i];
+        backMsg+="\n";
+        backMsg+="}";
+        if(i!=n-1)backMsg+=",";
+        backMsg+="\n";
+    }
+    backMsg+="],\n\"totalPages\": "+std::to_string(allpage)+"\n}";
+
+    Task* task = new writeTask(m_epoll,m_fd,4,0,backMsg);
+    ThreadPool::addTask(task);
+}
+
+void readTask::attentionMsg()
+{
+    int index = m_body.find("&id=");
+    std::string page = m_body.substr(5,index-5);
+    std::string id = m_body.substr(index+4);
+    std::string sql = "select count(*) as cnt from Message";
+    int npage = std::stoi(page);
+    auto res = DataBase::getInstance()->executeSQL(sql.c_str());
+    std::string s(res["cnt"][0]);
+    int cnt = std::stoi(s);
+    int allpage = cnt/3+(cnt%3!=0);
+    sql = "SELECT u.username,u.headimg,m.txt,m.likes,m.comments FROM `Message` m INNER JOIN `User` u ON m.authorid = u.id INNER JOIN `Follows` f ON f.follower_id = "+id+" AND m.authorid = f.followed_id ORDER BY m.id DESC LIMIT 3 OFFSET "+std::to_string((npage-1)*3)+";";
+    res = DataBase::getInstance()->executeSQL(sql.c_str());
+
+    std::string backMsg = "{\n\"data\":[\n";
+    
+    int n = res["username"].size();
+    for(int i = 0;i<n;i++)
+    {
+        backMsg+="{\n\"author\": \"";
+        backMsg+=res["username"][i];
+        backMsg+="\",\n";
+        backMsg+="\"avatar\": \"";
+        backMsg+="http://192.168.88.101:19200";//需更换为实际服务器ip
+        backMsg+=res["headimg"][i];
+        backMsg+="\",\n";
+        backMsg+="\"content\": \"";
+        backMsg+=res["txt"][i];
+        backMsg+="\",\n";
+        backMsg+="\"likes\": ";
+        backMsg+=res["likes"][i];
+        backMsg+=",\n";
+        backMsg+="\"comments\": ";
+        backMsg+=res["comments"][i];
+        backMsg+="\n";
+        backMsg+="}";
+        if(i!=n-1)backMsg+=",";
+        backMsg+="\n";
+    }
+    backMsg+="],\n\"totalPages\": "+std::to_string(allpage)+"\n}";
+
+    Task* task = new writeTask(m_epoll,m_fd,4,0,backMsg);
+    ThreadPool::addTask(task);
+}
+
+void readTask::myMsg()
+{
+   int index = m_body.find("&id=");
+    std::string page = m_body.substr(5,index-5);
+    std::string id = m_body.substr(index+4);
+    std::string sql = "select count(*) as cnt from Message";
+    int npage = std::stoi(page);
+    auto res = DataBase::getInstance()->executeSQL(sql.c_str());
+    std::string s(res["cnt"][0]);
+    int cnt = std::stoi(s);
+    int allpage = cnt/3+(cnt%3!=0);
+    sql = "SELECT username,headimg,txt,likes,comments FROM `Message` m LEFT JOIN `User` u ON m.authorid = u.id WHERE m.authorid = "+id+" ORDER BY m.id DESC LIMIT 3 OFFSET "+std::to_string((npage-1)*3)+";";
+    res = DataBase::getInstance()->executeSQL(sql.c_str());
+
+    std::string backMsg = "{\n\"data\":[\n";
+    
     int n = res["username"].size();
     for(int i = 0;i<n;i++)
     {
@@ -353,6 +451,8 @@ void writeTask::sendFindMsg()
     httpmsg+=std::to_string(m_msg.size());
     httpmsg+="\r\n\r\n";
     httpmsg+=m_msg;
+
+    std::cout<<"返回数据:"<<httpmsg<<std::endl;
 
     send(m_fd,httpmsg.c_str(),httpmsg.size(),0);
 }
