@@ -198,7 +198,7 @@ void readTask::findMsg()
     std::string page = m_body.substr(5);
     int npage = std::stoi(page);
     //查询消息总数量
-    std::string sql = "select count(*) as cnt from Message";
+    std::string sql = "select count(*) as cnt from Message;";
     auto res = DataBase::getInstance()->executeSQL(sql.c_str());
     std::string s(res["cnt"][0]);
     int cnt = std::stoi(s);
@@ -263,7 +263,7 @@ void readTask::attentionMsg()
     int index = m_body.find("&id=");
     std::string page = m_body.substr(5,index-5);
     std::string id = m_body.substr(index+4);
-    std::string sql = "select count(*) as cnt from Message";
+    std::string sql = "select count(*) as cnt from Message m inner join Follows f on m.authorid = f.followed_id where f.follower_id = "+id+";";
     int npage = std::stoi(page);
     auto res = DataBase::getInstance()->executeSQL(sql.c_str());
     std::string s(res["cnt"][0]);
@@ -308,7 +308,7 @@ void readTask::myMsg()
    int index = m_body.find("&id=");
     std::string page = m_body.substr(5,index-5);
     std::string id = m_body.substr(index+4);
-    std::string sql = "select count(*) as cnt from Message";
+    std::string sql = "select count(*) as cnt from Message where authorid = "+id+";";
     int npage = std::stoi(page);
     auto res = DataBase::getInstance()->executeSQL(sql.c_str());
     std::string s(res["cnt"][0]);
@@ -452,7 +452,6 @@ void writeTask::sendFindMsg()
     httpmsg+="\r\n\r\n";
     httpmsg+=m_msg;
 
-    std::cout<<"返回数据:"<<httpmsg<<std::endl;
 
     send(m_fd,httpmsg.c_str(),httpmsg.size(),0);
 }
@@ -460,7 +459,7 @@ void writeTask::sendFindMsg()
 void writeTask::sendImg()
 {
     std::string path = "./img"+m_msg;//注意相对路径
-    std::cout<<path<<std::endl;
+
     std::ifstream file(path, std::ios::binary);  // 二进制方式读取图片
     // 读取文件内容到字符串
     std::string content((std::istreambuf_iterator<char>(file)), 

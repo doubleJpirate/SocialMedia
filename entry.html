@@ -6,7 +6,6 @@
     <title>登录/注册</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-
     <script>
         tailwind.config = {
             theme: {
@@ -19,34 +18,24 @@
             }
         }
     </script>
-
     <style type="text/tailwindcss">
         @layer utilities {
-            .form-focus {
-                @apply focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none;
-            }
-            .btn-effect {
-                @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200;
-            }
-            .error-message {
-                @apply text-red-500 text-sm mt-1;
-            }
+            .form-focus { @apply focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none; }
+            .btn-effect { @apply hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200; }
+            .error-message { @apply text-red-500 text-sm mt-1; }
         }
     </style>
 </head>
-
 <body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="p-6 border-b">
                 <h1 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800 text-center mb-6">登录/注册</h1>
-                
                 <div class="flex rounded-lg overflow-hidden border bg-gray-100">
                     <button id="loginTab" class="flex-1 py-3 px-4 bg-primary text-white font-medium">登录</button>
                     <button id="registerTab" class="flex-1 py-3 px-4 text-gray-600 font-medium">注册</button>
                 </div>
             </div>
-
             <div class="p-6">
                 <form id="loginForm">
                     <div class="mb-4">
@@ -55,13 +44,10 @@
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                                 <i class="fa fa-user"></i>
                             </span>
-                            <input type="text" id="loginUsername"
-                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
-                                   placeholder="请输入" required>
+                            <input type="text" id="loginUsername" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus" placeholder="请输入" required>
                         </div>
                         <div id="loginUserError" class="error-message hidden"></div>
                     </div>
-
                     <div class="mb-6">
                         <div class="flex justify-between mb-1">
                             <label for="loginPassword" class="block text-sm font-medium text-gray-700">密码</label>
@@ -71,18 +57,12 @@
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                                 <i class="fa fa-lock"></i>
                             </span>
-                            <input type="password" id="loginPassword"
-                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
-                                   placeholder="请输入" required>
+                            <input type="password" id="loginPassword" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus" placeholder="请输入" required>
                         </div>
                         <div id="loginPwdError" class="error-message hidden"></div>
                     </div>
-
-                    <button type="button" id="loginBtn" class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg btn-effect">
-                        登录
-                    </button>
+                    <button type="button" id="loginBtn" class="w-full bg-primary text-white font-medium py-3 px-4 rounded-lg btn-effect">登录</button>
                 </form>
-
                 <form id="registerForm" class="hidden">
                     <div class="mb-4">
                         <label for="regUsername" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
@@ -90,68 +70,51 @@
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                                 <i class="fa fa-user-plus"></i>
                             </span>
-                            <input type="text" id="regUsername"
-                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
-                                   placeholder="请设置" required>
+                            <input type="text" id="regUsername" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus" placeholder="请设置" required>
                         </div>
                         <div id="regUserError" class="error-message hidden"></div>
                     </div>
-
                     <div class="mb-4">
                         <label for="regEmail" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                                 <i class="fa fa-envelope"></i>
                             </span>
-                            <input type="email" id="regEmail"
-                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
-                                   placeholder="请输入" required>
+                            <input type="email" id="regEmail" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus" placeholder="请输入" required>
                         </div>
                         <div id="regEmailError" class="error-message hidden"></div>
                     </div>
-
                     <div class="mb-4">
                         <label for="regPassword" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                                 <i class="fa fa-lock"></i>
                             </span>
-                            <input type="password" id="regPassword"
-                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
-                                   placeholder="请设置" required>
+                            <input type="password" id="regPassword" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus" placeholder="请设置" required>
                         </div>
                         <div id="regPwdError" class="error-message hidden"></div>
                     </div>
-
                     <div class="mb-6">
                         <label for="regConfirmPassword" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                                 <i class="fa fa-lock"></i>
                             </span>
-                            <input type="password" id="regConfirmPassword"
-                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus"
-                                   placeholder="请再次输入" required>
+                            <input type="password" id="regConfirmPassword" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg form-focus" placeholder="请再次输入" required>
                         </div>
                         <div id="regConfirmError" class="error-message hidden"></div>
                     </div>
-
-                    <button type="button" id="registerBtn" class="w-full bg-secondary text-white font-medium py-3 px-4 rounded-lg btn-effect">
-                        注册
-                    </button>
+                    <button type="button" id="registerBtn" class="w-full bg-secondary text-white font-medium py-3 px-4 rounded-lg btn-effect">注册</button>
                 </form>
             </div>
         </div>
-
         <p class="text-center text-gray-500 text-sm mt-6">© 2025 轻量级社交媒体-前端代码由AI生成</p>
     </div>
-
     <script>
         const loginTab = document.getElementById('loginTab');
         const registerTab = document.getElementById('registerTab');
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
-
         loginTab.addEventListener('click', () => {
             loginTab.classList.add('bg-primary', 'text-white');
             loginTab.classList.remove('text-gray-600');
@@ -160,7 +123,6 @@
             loginForm.classList.remove('hidden');
             registerForm.classList.add('hidden');
         });
-
         registerTab.addEventListener('click', () => {
             registerTab.classList.add('bg-primary', 'text-white');
             registerTab.classList.remove('text-gray-600');
@@ -169,27 +131,22 @@
             registerForm.classList.remove('hidden');
             loginForm.classList.add('hidden');
         });
-
         function clearErrors(errorElements) {
             errorElements.forEach(el => {
                 el.textContent = '';
                 el.classList.add('hidden');
             });
         }
-
         function showError(element, message) {
             element.textContent = message;
             element.classList.remove('hidden');
         }
-
         document.getElementById('loginBtn').addEventListener('click', async () => {
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
             const userError = document.getElementById('loginUserError');
             const pwdError = document.getElementById('loginPwdError');
-            
             clearErrors([userError, pwdError]);
-            
             let isValid = true;
             if (!username) {
                 showError(userError, '请输入用户名/邮箱');
@@ -199,29 +156,22 @@
                 showError(pwdError, '请输入密码');
                 isValid = false;
             }
-            
             if (!isValid) return;
-            
             try {
                 const data = new URLSearchParams();
                 data.append('user', username);
                 data.append('password', password);
-                
                 const response = await fetch('http://192.168.88.101:19200/api/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: data.toString()
                 });
-                
                 if (response.ok) {
                     const html = await response.text();
                     document.open();
                     document.write(html);
                     document.close();
-                } 
-                else {
+                } else {
                     const error = await response.json();
                     alert(error.msg || '登录失败，请检查用户名和密码');
                 }
@@ -230,30 +180,21 @@
                 alert('网络错误：' + error.message);
             }
         });
-
-        // 注册功能（保持不变）
         document.getElementById('registerBtn').addEventListener('click', async () => {
             const username = document.getElementById('regUsername').value.trim();
             const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value.trim();
             const confirmPwd = document.getElementById('regConfirmPassword').value.trim();
-            
-            // 错误元素
             const userError = document.getElementById('regUserError');
             const emailError = document.getElementById('regEmailError');
             const pwdError = document.getElementById('regPwdError');
             const confirmError = document.getElementById('regConfirmError');
-            
-            // 清除之前的错误提示
             clearErrors([userError, emailError, pwdError, confirmError]);
-            
-            // 简单验证
             let isValid = true;
             if (!username) {
                 showError(userError, '请设置用户名');
                 isValid = false;
             }
-            
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!email) {
                 showError(emailError, '请输入邮箱');
@@ -262,7 +203,6 @@
                 showError(emailError, '请输入有效的邮箱地址');
                 isValid = false;
             }
-            
             if (!password) {
                 showError(pwdError, '请设置密码');
                 isValid = false;
@@ -270,7 +210,6 @@
                 showError(pwdError, '密码长度不能少于6位');
                 isValid = false;
             }
-            
             if (!confirmPwd) {
                 showError(confirmError, '请再次输入密码');
                 isValid = false;
@@ -278,31 +217,23 @@
                 showError(confirmError, '两次输入的密码不一致');
                 isValid = false;
             }
-            
             if (!isValid) return;
-            
             try {
                 const data = new URLSearchParams();
                 data.append('user', username);
                 data.append('email', email);
                 data.append('password', password);
-                
                 const response = await fetch('http://192.168.88.101:19200/api/register', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: data.toString()
                 });
-                
-                // 处理响应
                 let result;
                 try {
                     result = await response.json();
                 } catch (e) {
                     result = { message: '服务器响应格式错误' };
                 }
-                
                 if (response.ok) {
                     alert('注册成功，请登录！');
                     console.log('注册成功', result);
