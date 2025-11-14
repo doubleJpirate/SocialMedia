@@ -5,316 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>极简社交</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-        }
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            padding-bottom: 115px;
-        }
-        .header {
-            background-color: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            padding: 0 20px;
-        }
-        .header-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 60px;
-        }
-        .logo {
-            font-size: 22px;
-            font-weight: bold;
-            color: #2d8cf0;
-            text-decoration: none;
-        }
-        .publish-btn {
-            position: absolute;
-            right: 20px;
-            background-color: #2d8cf0;
-            color: white;
-            border: none;
-            padding: 6px 16px;
-            border-radius: 18px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .user-avatar {
-            position: absolute;
-            left: 20px;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid transparent;
-        }
-        .main {
-            max-width: 1200px;
-            margin: 80px auto 0;
-            display: flex;
-            gap: 20px;
-        }
-        .content {
-            flex: 1;
-        }
-        .sidebar {
-            width: 280px;
-            flex-shrink: 0;
-        }
-        .post-card {
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 15px;
-            padding: 15px;
-        }
-        .post-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        .post-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .post-author {
-            flex: 1;
-        }
-        .author-name {
-            font-weight: 600;
-            font-size: 15px;
-            color: #333;
-        }
-        .post-content {
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            color: #333;
-        }
-        .post-actions {
-            display: flex;
-            justify-content: flex-start;
-            gap: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #f5f5f5;
-        }
-        .action-btn {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            color: #666;
-            padding: 5px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .action-btn.liked {
-            color: #f53f3f;
-        }
-        .action-btn:hover {
-            background-color: #f5f5f5;
-        }
-        .sidebar-card {
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        .sidebar-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #333;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .nav-list {
-            list-style: none;
-        }
-        .nav-item {
-            margin-bottom: 12px;
-        }
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            color: #666;
-            font-size: 14px;
-            padding: 8px 10px;
-            border-radius: 8px;
-        }
-        .nav-link.active {
-            color: #2d8cf0;
-            background-color: #f0f7ff;
-        }
-        .nav-icon {
-            font-size: 18px;
-        }
-        .mobile-nav {
-            display: none;
-            position: fixed;
-            bottom: 50px;
-            left: 0;
-            right: 0;
-            background-color: #fff;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
-            height: 55px;
-        }
-        .mobile-nav-list {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            height: 100%;
-            list-style: none;
-        }
-        .mobile-nav-link {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            text-decoration: none;
-            font-size: 11px;
-            gap: 4px;
-        }
-        .mobile-nav-link.active {
-            color: #2d8cf0;
-        }
-        .mobile-nav-icon {
-            font-size: 20px;
-        }
-        .pagination {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #fff;
-            padding: 10px 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 -1px 5px rgba(0,0,0,0.05);
-        }
-        .page-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 1px solid #eee;
-            background-color: #fff;
-            color: #666;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .page-btn.active {
-            background-color: #2d8cf0;
-            color: white;
-            border-color: #2d8cf0;
-        }
-        .page-btn:hover:not(.active) {
-            border-color: #2d8cf0;
-            color: #2d8cf0;
-        }
-        .page-prev, .page-next {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 1px solid #eee;
-            background-color: #fff;
-            color: #666;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .page-prev:hover, .page-next:hover {
-            border-color: #2d8cf0;
-            color: #2d8cf0;
-        }
-        .publish-container {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #fff;
-            z-index: 200;
-            padding: 20px;
-        }
-        .publish-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            height: 60px;
-        }
-        .back-btn, .send-btn {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            border: none;
-        }
-        .back-btn {
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        .send-btn {
-            background-color: #2d8cf0;
-            color: white;
-        }
-        .publish-input {
-            width: 100%;
-            height: calc(100% - 100px);
-            border: none;
-            outline: none;
-            resize: none;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px 0;
-            color: #666;
-            font-size: 14px;
-        }
-        @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-            .mobile-nav {
-                display: block;
-            }
-        }
-        @media (max-width: 480px) {
-            .header-container {
-                padding: 0 15px;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
+        body { background-color: #f5f7fa; color: #333; padding-bottom: 115px; }
+        .header { background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 0 20px; }
+        .header-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: center; height: 60px; }
+        .logo { font-size: 22px; font-weight: bold; color: #2d8cf0; text-decoration: none; }
+        .publish-btn { position: absolute; right: 20px; background-color: #2d8cf0; color: white; border: none; padding: 6px 16px; border-radius: 18px; font-size: 14px; font-weight: 500; }
+        .user-avatar { position: absolute; left: 20px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid transparent; }
+        .main { max-width: 1200px; margin: 80px auto 0; display: flex; gap: 20px; }
+        .content { flex: 1; }
+        .sidebar { width: 280px; flex-shrink: 0; }
+        .post-card { background-color: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px; padding: 15px; }
+        .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .post-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+        .post-author { flex: 1; }
+        .author-name { font-weight: 600; font-size: 15px; color: #333; }
+        .post-content { font-size: 14px; line-height: 1.6; margin-bottom: 15px; color: #333; }
+        .post-actions { display: flex; justify-content: flex-start; gap: 20px; padding-top: 10px; border-top: 1px solid #f5f5f5; }
+        .action-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .action-btn.liked { color: #f53f3f; }
+        .action-btn:hover { background-color: #f5f5f5; }
+        .sidebar-card { background-color: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 15px; margin-bottom: 15px; }
+        .sidebar-title { font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #333; display: flex; align-items: center; gap: 8px; }
+        .nav-list { list-style: none; }
+        .nav-item { margin-bottom: 12px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #666; font-size: 14px; padding: 8px 10px; border-radius: 8px; }
+        .nav-link.active { color: #2d8cf0; background-color: #f0f7ff; }
+        .nav-icon { font-size: 18px; }
+        .mobile-nav { display: none; position: fixed; bottom: 50px; left: 0; right: 0; background-color: #fff; box-shadow: 0 -2px 8px rgba(0,0,0,0.05); height: 55px; }
+        .mobile-nav-list { display: flex; justify-content: space-around; align-items: center; height: 100%; list-style: none; }
+        .mobile-nav-link { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; text-decoration: none; font-size: 11px; gap: 4px; }
+        .mobile-nav-link.active { color: #2d8cf0; }
+        .mobile-nav-icon { font-size: 20px; }
+        .pagination { position: fixed; bottom: 0; left: 0; right: 0; background-color: #fff; padding: 10px 0; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 -1px 5px rgba(0,0,0,0.05); }
+        .page-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #eee; background-color: #fff; color: #666; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .page-btn.active { background-color: #2d8cf0; color: white; border-color: #2d8cf0; }
+        .page-btn:hover:not(.active) { border-color: #2d8cf0; color: #2d8cf0; }
+        .page-prev, .page-next { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #eee; background-color: #fff; color: #666; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .page-prev:hover, .page-next:hover { border-color: #2d8cf0; color: #2d8cf0; }
+        .publish-container { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: #fff; z-index: 200; padding: 20px; }
+        .publish-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; height: 60px; }
+        .back-btn, .send-btn { padding: 8px 16px; border-radius: 20px; font-size: 14px; cursor: pointer; border: none; }
+        .back-btn { background-color: #f5f5f5; color: #333; }
+        .send-btn { background-color: #2d8cf0; color: white; }
+        .publish-input { width: 100%; height: calc(100% - 100px); border: none; outline: none; resize: none; font-size: 16px; line-height: 1.6; }
+        .loading { text-align: center; padding: 40px 0; color: #666; font-size: 14px; }
+        @media (max-width: 768px) { .sidebar { display: none; } .mobile-nav { display: block; } }
+        @media (max-width: 480px) { .header-container { padding: 0 15px; } }
     </style>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -329,8 +66,7 @@
         </div>
     </header>
     <div class="main">
-        <div class="content" id="contentContainer">
-        </div>
+        <div class="content" id="contentContainer"></div>
         <div class="sidebar">
             <div class="sidebar-card">
                 <div class="sidebar-title">
@@ -411,7 +147,9 @@
             discover: '/api/find',
             attention: '/api/attention',
             mypost: '/api/mypost',
-            publish: '/api/publish'
+            publish: '/api/publish',
+            like: '/api/like',
+            unlike: '/api/unlike'
         };
         const mainElements = document.querySelectorAll('.header, .main, .mobile-nav, .pagination');
         const publishContainer = document.getElementById('publishContainer');
@@ -499,7 +237,7 @@
                 const apiUrl = apiUrls[currentTab];
                 if (!apiUrl) throw new Error('未知的导航目标');
                 let formData = `page=${page}`;
-                if ((currentTab === 'attention' || currentTab === 'mypost') && userId) {
+                if (userId) {
                     formData += `&id=${userId}`;
                 }
                 const response = await fetch(`http://192.168.88.101:19200${apiUrl}`, {
@@ -513,7 +251,7 @@
                 renderPagination(result.totalPages, page);
             } catch (error) {
                 console.error('获取数据失败:', error);
-                renderPosts([{author: "示例用户",avatar: "https://picsum.photos/id/237/200",content: "数据加载失败，这是示例内容",likes: 20,comments: 5}]);
+                renderPosts([{author: "示例用户",avatar: "https://picsum.photos/id/237/200",content: "数据加载失败，这是示例内容",likes: 20,comments: 5,msgid: 0,isLiked: false}]);
             }
         }
         function renderPosts(posts) {
@@ -534,8 +272,8 @@
                     </div>
                     <div class="post-content">${post.content}</div>
                     <div class="post-actions">
-                        <div class="action-btn like-btn" data-likes="${post.likes}">
-                            <i class="far fa-heart"></i>
+                        <div class="action-btn like-btn ${post.isLiked ? 'liked' : ''}" data-likes="${post.likes}" data-msgid="${post.msgid}">
+                            <i class="${post.isLiked ? 'fas' : 'far'} fa-heart"></i>
                             <span>点赞(${post.likes})</span>
                         </div>
                         <div class="action-btn comment-btn">
@@ -554,17 +292,36 @@
                     const icon = this.querySelector('i');
                     const text = this.querySelector('span');
                     let likes = parseInt(this.dataset.likes);
+                    const msgid = this.dataset.msgid;
+                    if (!userId || !msgid) return;
+                    
+                    // 立即更新前端状态，不关心后端是否成功
                     if (icon.classList.contains('far')) {
+                        // 点赞
                         icon.classList.remove('far');
                         icon.classList.add('fas');
                         this.classList.add('liked');
                         likes++;
+                        // 发送点赞请求（不处理结果）
+                        fetch(`http://192.168.88.101:19200${apiUrls.like}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            body: `userid=${userId}&msgid=${msgid}`
+                        }).catch(err => console.error('点赞请求失败:', err));
                     } else {
+                        // 取消点赞
                         icon.classList.remove('fas');
                         icon.classList.add('far');
                         this.classList.remove('liked');
                         likes--;
+                        // 发送取消点赞请求（不处理结果）
+                        fetch(`http://192.168.88.101:19200${apiUrls.unlike}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            body: `userid=${userId}&msgid=${msgid}`
+                        }).catch(err => console.error('取消点赞请求失败:', err));
                     }
+                    // 更新DOM显示，确保用户实时看到变化
                     this.dataset.likes = likes;
                     text.textContent = `点赞(${likes})`;
                 });

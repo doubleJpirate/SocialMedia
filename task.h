@@ -45,6 +45,8 @@ private:
     void attentionMsg();
     void myMsg();
     void publish();
+    void addLike();
+    void delLike();
 
 private:
     std::string m_method;//以下三个为http报文请求头

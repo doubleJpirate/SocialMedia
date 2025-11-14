@@ -15,6 +15,8 @@
 #include "tools.h"
 #include "database.h"
 
+//临时编译指令g++ -std=c++11 *.o task.cpp -o text -pthread -lmysqlclient
+
 void ListenTask::process()
 {
     int clientfd = accept(m_fd, nullptr, nullptr);
@@ -138,6 +140,14 @@ void readTask::handle(std::string recvMsg)
         {
             publish();
         }
+        else if(m_path=="/api/like")
+        {
+            addLike();
+        }
+        else if(m_path=="/api/unlike")
+        {
+            delLike();
+        }
     }
 }
 
@@ -198,8 +208,11 @@ void readTask::userRegister()
 
 void readTask::findMsg()
 {
-    //page=...
-    std::string page = m_body.substr(5);
+    //page=...&id=...
+    int index = m_body.find("&id=");
+    std::string page = m_body.substr(5,index-5);
+    std::string id = m_body.substr(index+4);
+
     int npage = std::stoi(page);
     //查询消息总数量
     std::string sql = "select count(*) as cnt from Message;";
@@ -209,30 +222,34 @@ void readTask::findMsg()
     //向上取整分页
     int allpage = cnt/3+(cnt%3!=0);
     //每三组数据分为一组，查询第page组数据
-    sql = "SELECT username,headimg,txt,likes,comments FROM `Message` m LEFT JOIN `User` u ON m.authorid = u.id ORDER BY m.id DESC LIMIT 3 OFFSET "+std::to_string((npage-1)*3)+";";
+    sql = "SELECT username,headimg,txt,likes,comments,m.id,CASE WHEN l.msgid IS NOT NULL THEN 1 ELSE 0 END AS isliked FROM `Message` m LEFT JOIN `User` u ON m.authorid = u.id LEFT JOIN `Likes` l ON m.id = l.msgid AND l.userid = "+id+" ORDER BY m.id DESC LIMIT 3 OFFSET "+std::to_string((npage-1)*3)+";";
     res = DataBase::getInstance()->executeSQL(sql.c_str());
 
     std::string backMsg = "{\n\"data\":[\n";
     // 返回数据示例
-    //     {
-    //   "data": [
-    //     {
-    //       "author": "测试",
-    //       "avatar": "/img/test.png",
-    //       "content": "周末去了这家餐厅，味道超赞",
-    //       "likes": 76,
-    //       "comments": 12
-    //     },
-    //     {
-    //       "author": "是一对J",
-    //       "avatar": "/img/user1.png",
-    //       "content": "大家有什么好的健身方法推荐吗？",
-    //       "likes": 33,
-    //       "comments": 9
-    //     }
-    //   ],
-    //   "totalPages": 5  // 总页数仍为5，前端分页按钮不变
-    //    }
+//     {
+//      "data": [
+//      {
+//           "author": "测试",
+//          "avatar": "/img/test.png",
+//          "content": "周末去了这家餐厅，味道超赞",
+//          "likes": 76,
+//          "comments": 12,
+//          "msgid": 1001,
+//          "isLiked": false
+//      },
+//      {
+//          "author": "是一对J",
+//          "avatar": "/img/user1.png",
+//          "content": "大家有什么好的健身方法推荐吗？",
+//          "likes": 33,
+//          "comments": 9,
+//          "msgid": 1002,
+//          "isLiked": true
+//      }
+//      ],
+//      "totalPages": 5  // 总页数不变，前端分页逻辑保持原样
+//      }
     int n = res["username"].size();
     for(int i = 0;i<n;i++)
     {
@@ -251,6 +268,12 @@ void readTask::findMsg()
         backMsg+=",\n";
         backMsg+="\"comments\": ";
         backMsg+=res["comments"][i];
+        backMsg+=",\n";
+        backMsg+="\"msgid\": ";
+        backMsg+=res["id"][i];
+        backMsg+=",\n";
+        backMsg+="\"isLiked\": ";
+        backMsg+=res["isliked"][i];
         backMsg+="\n";
         backMsg+="}";
         if(i!=n-1)backMsg+=",";
@@ -273,7 +296,7 @@ void readTask::attentionMsg()
     std::string s(res["cnt"][0]);
     int cnt = std::stoi(s);
     int allpage = cnt/3+(cnt%3!=0);
-    sql = "SELECT u.username,u.headimg,m.txt,m.likes,m.comments FROM `Message` m INNER JOIN `User` u ON m.authorid = u.id INNER JOIN `Follows` f ON f.follower_id = "+id+" AND m.authorid = f.followed_id ORDER BY m.id DESC LIMIT 3 OFFSET "+std::to_string((npage-1)*3)+";";
+    sql = "SELECT u.username,u.headimg,m.txt,m.likes,m.comments,m.id,CASE WHEN l.msgid IS NOT NULL THEN 1 ELSE 0 END AS isliked FROM `Message` m INNER JOIN `User` u ON m.authorid = u.id INNER JOIN `Follows` f ON f.follower_id = "+id+" AND m.authorid = f.followed_id LEFT JOIN `Likes` l ON m.id = l.msgid AND l.userid = "+id+" ORDER BY m.id DESC LIMIT 3 OFFSET "+std::to_string((npage-1)*3)+";";
     res = DataBase::getInstance()->executeSQL(sql.c_str());
 
     std::string backMsg = "{\n\"data\":[\n";
@@ -296,6 +319,12 @@ void readTask::attentionMsg()
         backMsg+=",\n";
         backMsg+="\"comments\": ";
         backMsg+=res["comments"][i];
+        backMsg+=",\n";
+        backMsg+="\"msgid\": ";
+        backMsg+=res["id"][i];
+        backMsg+=",\n";
+        backMsg+="\"isLiked\": ";
+        backMsg+=res["isliked"][i];
         backMsg+="\n";
         backMsg+="}";
         if(i!=n-1)backMsg+=",";
@@ -318,7 +347,7 @@ void readTask::myMsg()
     std::string s(res["cnt"][0]);
     int cnt = std::stoi(s);
     int allpage = cnt/3+(cnt%3!=0);
-    sql = "SELECT username,headimg,txt,likes,comments FROM `Message` m LEFT JOIN `User` u ON m.authorid = u.id WHERE m.authorid = "+id+" ORDER BY m.id DESC LIMIT 3 OFFSET "+std::to_string((npage-1)*3)+";";
+    sql = "SELECT username,headimg,txt,likes,comments,m.id,CASE WHEN l.msgid IS NOT NULL THEN 1 ELSE 0 END AS isliked FROM `Message` m LEFT JOIN `User` u ON m.authorid = u.id LEFT JOIN `Likes` l ON m.id = l.msgid AND l.userid = "+id+" WHERE m.authorid = "+id+" ORDER BY m.id DESC LIMIT 3 OFFSET "+std::to_string((npage-1)*3)+";";
     res = DataBase::getInstance()->executeSQL(sql.c_str());
 
     std::string backMsg = "{\n\"data\":[\n";
@@ -341,6 +370,12 @@ void readTask::myMsg()
         backMsg+=",\n";
         backMsg+="\"comments\": ";
         backMsg+=res["comments"][i];
+        backMsg+=",\n";
+        backMsg+="\"msgid\": ";
+        backMsg+=res["id"][i];
+        backMsg+=",\n";
+        backMsg+="\"isLiked\": ";
+        backMsg+=res["isliked"][i];
         backMsg+="\n";
         backMsg+="}";
         if(i!=n-1)backMsg+=",";
@@ -370,6 +405,37 @@ void readTask::publish()
     DataBase::getInstance()->executeSQL(sql.c_str());
     Task* task = new writeTask(m_epoll,m_fd,6,0,"");
     ThreadPool::addTask(task);
+}
+
+void readTask::addLike()
+{
+    //userid=...&msgid=...
+    int index = m_body.find("&msgid=");
+    std::string userid = m_body.substr(7,index-7);
+    std::string msgid = m_body.substr(index+7);
+    std::string sql = "INSERT INTO `Likes` (`msgid`, `userid`) VALUES ("+msgid+", "+userid+");";
+
+    DataBase::getInstance()->executeSQL(sql.c_str());
+
+    sql = "UPDATE `Message` SET `likes` = `likes` + 1 WHERE `id` = "+msgid+";";
+
+    DataBase::getInstance()->executeSQL(sql.c_str());
+}
+
+void readTask::delLike()
+{
+    //userid=...&msgid=...
+    int index = m_body.find("&msgid=");
+    std::string userid = m_body.substr(7,index-7);
+    std::string msgid = m_body.substr(index+7);
+
+    std::string sql = "DELETE FROM `Likes` WHERE `msgid` = "+msgid+" AND `userid` = "+userid+";";
+
+    DataBase::getInstance()->executeSQL(sql.c_str());
+
+    sql = "UPDATE `Message` SET `likes` = `likes` - 1 WHERE `id` = "+msgid+";";
+
+    DataBase::getInstance()->executeSQL(sql.c_str());
 }
 
 void writeTask::process()

@@ -4,9 +4,9 @@
 
 ### 开发情况
 （目前版本几乎没有错误处理）  
-完成了三个页面的消息显示和分页显示  
-下一步写发布功能或者点赞功能  
-还有未实现的就是个人主页，关注功能，评论功能  
+完成了三个页面的消息显示和分页显示以及发布功能、点赞功能  
+下一步实现个人主页和头像上传功能,关注功能也会一并写了  
+还有未实现的就是评论功能  
 
 ### 技术栈
 **网络模型** ：Reactor 模型  
@@ -77,6 +77,12 @@ CREATE TABLE `Follows` (
   `followed_id` INT NOT NULL,
   FOREIGN KEY (`follower_id`) REFERENCES `User`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`followed_id`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE `Likes` (
+  `msgid` INT NOT NULL,
+  `userid` INT NOT NULL,
+  CONSTRAINT fk_likes_message FOREIGN KEY (`msgid`) REFERENCES `Message`(`id`) ON DELETE CASCADE,
+  CONSTRAINT fk_likes_user FOREIGN KEY (`userid`) REFERENCES `User`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
