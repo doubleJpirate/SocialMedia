@@ -134,6 +134,10 @@ void readTask::handle(std::string recvMsg)
         {
             myMsg();
         }
+        else if(m_path=="/api/publish")
+        {
+            publish();
+        }
     }
 }
 
@@ -348,14 +352,42 @@ void readTask::myMsg()
     ThreadPool::addTask(task);
 }
 
+void readTask::publish()
+{
+    //id=...&text=...
+    int index = m_body.find("&text=");
+    std::string id = m_body.substr(3,index-3);
+    std::string text = m_body.substr(index+6);
+    text = urlDecode(text);
+    if(text.empty())
+    {
+        Task* task = new writeTask(m_epoll,m_fd,6,1,"");
+        ThreadPool::addTask(task);
+        return;
+    }
+    std::string sql = "INSERT INTO `Message` (`txt`, `authorid`) VALUES ('"+text+"', "+id+");";
+
+    DataBase::getInstance()->executeSQL(sql.c_str());
+    Task* task = new writeTask(m_epoll,m_fd,6,0,"");
+    ThreadPool::addTask(task);
+}
+
 void writeTask::process()
 {
-    if(m_type==0)sendLoginHtml();
-    else if(m_type==1)sendRegisRes();
-    else if(m_type==2)sendLogRes();
-    else if(m_type==3)sendMainHtml();
-    else if(m_type==4)sendFindMsg();
-    else if(m_type==5)sendImg();
+    if(m_type==0)
+        sendLoginHtml();
+    else if(m_type==1)
+        sendRegisRes();
+    else if(m_type==2)
+        sendLogRes();
+    else if(m_type==3)
+        sendMainHtml();
+    else if(m_type==4)
+        sendFindMsg();
+    else if(m_type==5)
+        sendImg();
+    else if(m_type==6)
+        sendPublishRes();
     delete this;
 }
 
@@ -373,14 +405,16 @@ void writeTask::sendLoginHtml()
 void writeTask::sendRegisRes()
 {
     std::string regisRes,content;
-    if(m_status==0){
+    if(m_status==0)
+    {
         regisRes+="HTTP/1.1 200 OK\r\n";
         content = R"({
     "success": true,
     "message": "注册成功"
     })";
     }
-    else{
+    else
+    {
         regisRes+="HTTP/1.1 400 Bad Request\r\n";
         content = R"({
   "success": false,
@@ -395,7 +429,8 @@ void writeTask::sendRegisRes()
 
 void writeTask::sendLogRes()
 {
-    if(m_status){
+    if(m_status)
+    {
         std::string logRes,content;
         logRes = "HTTP/1.1 401 Unauthorized\r\n";
         content = "{\"code\":401,\"msg\":\"failed\"}";
@@ -404,7 +439,8 @@ void writeTask::sendLogRes()
         logRes+=content;
         send(m_fd,logRes.c_str(),logRes.size(),0);
     }
-    else{
+    else
+    {
         std::string midEdge;
     std::string html = R"(<!DOCTYPE html>
 <html>
@@ -470,4 +506,30 @@ void writeTask::sendImg()
     response += "\r\n";
     response += content;
     send(m_fd, response.c_str(), response.size(), 0);
+}
+
+void writeTask::sendPublishRes()
+{
+    std::string pubRes,content;
+    if(m_status)
+    {
+        pubRes = "HTTP/1.1 400 Bad Request\r\n";
+        content = R"({
+    "success": false,
+    "message": "发布失败",
+    })";
+        pubRes+="Content-Type: application/json; charset=utf-8\r\n";  
+    }
+    else
+    {
+        pubRes = "HTTP/1.1 200 OK\r\n";
+        content = R"({
+  "success": true,
+  "message": "发布成功"
+    })";
+        pubRes+="Content-Type: application/json; charset=utf-8\r\n";
+    }
+    pubRes+="Content-Length: "+std::to_string(content.size())+"\r\n\r\n";
+    pubRes+=content;
+    send(m_fd,pubRes.c_str(),pubRes.size(),0);
 }

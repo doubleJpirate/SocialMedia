@@ -44,6 +44,7 @@ private:
     void findMsg();
     void attentionMsg();
     void myMsg();
+    void publish();
 
 private:
     std::string m_method;//以下三个为http报文请求头
@@ -70,6 +71,7 @@ private:
     void sendMainHtml();
     void sendFindMsg();
     void sendImg();
+    void sendPublishRes();
     
 private:
     int m_type;//表示回复消息类型
