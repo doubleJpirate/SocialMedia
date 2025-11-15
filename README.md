@@ -59,7 +59,8 @@ CREATE TABLE `User` (
   `email` VARCHAR(100) NOT NULL UNIQUE,
   `headimg` VARCHAR(100) DEFAULT '/img/default.png',
   `follows` INT DEFAULT 0,
-  `fans` INT DEFAULT 0
+  `fans` INT DEFAULT 0,
+  `personality` TEXT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE TABLE `Message`(
     `id`       INT PRIMARY KEY AUTO_INCREMENT,
@@ -83,6 +84,14 @@ CREATE TABLE `Likes` (
   `userid` INT NOT NULL,
   CONSTRAINT fk_likes_message FOREIGN KEY (`msgid`) REFERENCES `Message`(`id`) ON DELETE CASCADE,
   CONSTRAINT fk_likes_user FOREIGN KEY (`userid`) REFERENCES `User`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE `Comments` (
+  `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `msgid` INT NOT NULL,
+  `userid` INT NOT NULL,
+  `content` TEXT NOT NULL,
+  CONSTRAINT fk_comments_message FOREIGN KEY (`msgid`) REFERENCES `Message`(`id`) ON DELETE CASCADE,
+  CONSTRAINT fk_comments_user FOREIGN KEY (`userid`) REFERENCES `User`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 

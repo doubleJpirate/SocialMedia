@@ -47,6 +47,8 @@ private:
     void publish();
     void addLike();
     void delLike();
+    void getComment();
+    void postComment();
 
 private:
     std::string m_method;//以下三个为http报文请求头
@@ -71,7 +73,7 @@ private:
     void sendRegisRes();
     void sendLogRes();
     void sendMainHtml();
-    void sendFindMsg();
+    void sendBackMsg();
     void sendImg();
     void sendPublishRes();
     

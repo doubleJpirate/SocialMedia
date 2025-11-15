@@ -148,6 +148,14 @@ void readTask::handle(std::string recvMsg)
         {
             delLike();
         }
+        else if(m_path=="/api/getcomment")
+        {
+            getComment();
+        }
+        else if(m_path=="/api/postcomment")
+        {
+            postComment();
+        }
     }
 }
 
@@ -200,12 +208,13 @@ void readTask::userRegister()
         return;
     }
     // 下面的语句存在sql注入风险，但是只是作为练手项目，暂不考虑这些问题
-    std::string inssql = "INSERT INTO `User` (username, password, email) VALUES ('"+user+"', '"+pwd+"', '"+email+"');";
+    std::string inssql = "INSERT INTO `User` (username, password, email,personality) VALUES ('"+user+"', '"+pwd+"', '"+email+"','');";
     DataBase::getInstance()->executeSQL(inssql.c_str());
     Task* task = new writeTask(m_epoll,m_fd,1,0,"");
     ThreadPool::addTask(task);
 }
 
+//以下这些返回的json数据代码中都缺少特殊字符的处理，目前只是为了实现功能，暂不处理
 void readTask::findMsg()
 {
     //page=...&id=...
@@ -231,7 +240,7 @@ void readTask::findMsg()
 //      "data": [
 //      {
 //           "author": "测试",
-//          "avatar": "/img/test.png",
+//          "avatar": "http://192.168.88.101:19200/img/test.png",
 //          "content": "周末去了这家餐厅，味道超赞",
 //          "likes": 76,
 //          "comments": 12,
@@ -240,7 +249,7 @@ void readTask::findMsg()
 //      },
 //      {
 //          "author": "是一对J",
-//          "avatar": "/img/user1.png",
+//          "avatar": "http://192.168.88.101:19200/img/user1.png",
 //          "content": "大家有什么好的健身方法推荐吗？",
 //          "likes": 33,
 //          "comments": 9,
@@ -438,6 +447,90 @@ void readTask::delLike()
     DataBase::getInstance()->executeSQL(sql.c_str());
 }
 
+void readTask::getComment()
+{
+    //msgid=...&page=
+    int index = m_body.find("&page=");
+    std::string msgid = m_body.substr(6,index-6);
+    std::string page = m_body.substr(index+6);
+    int npage = std::stoi(page);
+
+    std::string sql = "select count(*) as cnt from Comments where msgid = "+msgid;
+
+    auto res = DataBase::getInstance()->executeSQL(sql.c_str());
+    std::string s(res["cnt"][0]);
+    int cnt = std::stoi(s);
+    //向上取整分页
+    int allpage = cnt/3+(cnt%3!=0);
+
+    sql = "select username,headimg,content from Comments c left join `User` u on c.userid = u.id WHERE msgid = "+msgid+"  ORDER BY c.id DESC LIMIT 3 OFFSET "+std::to_string((npage-1)*3)+";";
+    res = DataBase::getInstance()->executeSQL(sql.c_str());
+    std::string backMsg = "{\n\"totalPages\": "+std::to_string(allpage)+",\n\"data\": [\n";
+//示例返回内容
+//{
+//    "totalPages": 3,
+//    "data": [
+//     {
+//         "author": "张三",
+//         "avatar": "http://192.168.88.101:19200/img/user1.png",
+//         "content": "这个帖子很有道理！"
+//     },
+//    {
+//        "author": "李四",
+//         "avatar": "http://192.168.88.101:19200/img/user2.png",
+//         "content": "同意楼上观点~"
+//     },
+//     {
+//         "author": "王五",
+//         "avatar": "http://192.168.88.101:19200/img/user3.png",
+//         "content": "我补充一点..."
+//     }
+//     ]
+//}
+    int n = res["username"].size();
+    for(int i = 0;i<n;i++)
+    {
+        backMsg+="{\n\"author\": \"";
+        backMsg+=res["username"][i];
+        backMsg+="\",\n";
+        backMsg+="\"avatar\": \"";
+        backMsg+="http://192.168.88.101:19200";//需更换为实际服务器ip
+        backMsg+=res["headimg"][i];
+        backMsg+="\",\n";
+        backMsg+="\"content\": \"";
+        backMsg+=res["content"][i];
+        backMsg+="\"\n";
+        backMsg+="}";
+        if(i!=n-1)backMsg+=",";
+        backMsg+="\n";
+    }
+    backMsg+="]\n}";
+
+    Task* task = new writeTask(m_epoll,m_fd,4,0,backMsg);
+    ThreadPool::addTask(task);
+}
+
+void readTask::postComment()
+{
+    //userid=...&msgid=...&txt=...
+    int index = m_body.find("&msgid=");
+    std::string userid = m_body.substr(7,index-7);
+    int pos = index+7;
+    index = m_body.find("&txt=");
+    std::string msgid = m_body.substr(pos,index-pos);
+    std::string txt = m_body.substr(index+5);
+
+    txt = urlDecode(txt);
+    
+    std::string sql = "INSERT INTO `Comments` (`msgid`, `userid`, `content`) VALUES ("+msgid+","+userid+", '"+txt+"');";
+    DataBase::getInstance()->executeSQL(sql.c_str());
+    sql = "UPDATE `Message` SET `comments` = `comments` + 1 WHERE `id` = "+msgid+";";
+    DataBase::getInstance()->executeSQL(sql.c_str());
+
+    Task* task = new writeTask(m_epoll,m_fd,6,0,"");
+    ThreadPool::addTask(task);
+}
+
 void writeTask::process()
 {
     if(m_type==0)
@@ -449,7 +542,7 @@ void writeTask::process()
     else if(m_type==3)
         sendMainHtml();
     else if(m_type==4)
-        sendFindMsg();
+        sendBackMsg();
     else if(m_type==5)
         sendImg();
     else if(m_type==6)
@@ -547,7 +640,7 @@ void writeTask::sendMainHtml()
     send(m_fd,msg.c_str(), msg.size(), 0);
 }
 
-void writeTask::sendFindMsg()
+void writeTask::sendBackMsg()
 {
     std::string httpmsg = "HTTP/1.1 200 OK\r\nContent-Type: application/json; charset=utf-8\r\nContent-Length: ";
     httpmsg+=std::to_string(m_msg.size());

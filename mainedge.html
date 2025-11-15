@@ -50,6 +50,17 @@
         .send-btn { background-color: #2d8cf0; color: white; }
         .publish-input { width: 100%; height: calc(100% - 100px); border: none; outline: none; resize: none; font-size: 16px; line-height: 1.6; }
         .loading { text-align: center; padding: 40px 0; color: #666; font-size: 14px; }
+        .comments-container { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 1px solid #f5f5f5; margin-top: 10px; }
+        .comments-container.expanded { max-height: 500px; padding-top: 15px; }
+        .comment-item { display: flex; gap: 12px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f5f5f5; }
+        .comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .comment-content { flex: 1; }
+        .comment-author { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+        .comment-text { font-size: 14px; color: #333; line-height: 1.5; }
+        .comment-pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 15px 0; }
+        .comment-input-container { display: flex; gap: 10px; padding-top: 15px; border-top: 1px solid #f5f5f5; }
+        .comment-input { flex: 1; padding: 8px 12px; border: 1px solid #eee; border-radius: 20px; outline: none; font-size: 14px; }
+        .comment-send { padding: 8px 16px; background-color: #2d8cf0; color: white; border: none; border-radius: 20px; font-size: 14px; cursor: pointer; }
         @media (max-width: 768px) { .sidebar { display: none; } .mobile-nav { display: block; } }
         @media (max-width: 480px) { .header-container { padding: 0 15px; } }
     </style>
@@ -149,18 +160,22 @@
             mypost: '/api/mypost',
             publish: '/api/publish',
             like: '/api/like',
-            unlike: '/api/unlike'
+            unlike: '/api/unlike',
+            getcomment: '/api/getcomment',
+            postcomment: '/api/postcomment'
         };
         const mainElements = document.querySelectorAll('.header, .main, .mobile-nav, .pagination');
         const publishContainer = document.getElementById('publishContainer');
         const publishInput = document.getElementById('publishInput');
         const contentContainer = document.getElementById('contentContainer');
+        
         document.addEventListener('DOMContentLoaded', () => {
             getUserId();
             fetchPosts(currentPage);
             bindNavEvents();
             bindPublishEvents();
         });
+        
         function getUserId() {
             const storedUid = localStorage.getItem('uid');
             if (storedUid) {
@@ -174,6 +189,7 @@
                 localStorage.setItem('uid', userId);
             }
         }
+        
         function bindNavEvents() {
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.addEventListener('click', function(e) {
@@ -191,21 +207,25 @@
                 });
             });
         }
+        
         function bindPublishEvents() {
             document.getElementById('mainPublishBtn').addEventListener('click', showPublishPage);
             document.getElementById('backBtn').addEventListener('click', hidePublishPage);
             document.getElementById('sendBtn').addEventListener('click', sendPost);
         }
+        
         function showPublishPage() {
             mainElements.forEach(el => el.style.display = 'none');
             publishContainer.style.display = 'block';
             publishInput.focus();
         }
+        
         function hidePublishPage() {
             publishContainer.style.display = 'none';
             mainElements.forEach(el => el.style.display = '');
             publishInput.value = '';
         }
+        
         async function sendPost() {
             const text = publishInput.value.trim();
             if (!text || !userId) return;
@@ -223,6 +243,7 @@
                 console.error('发布失败:', error);
             }
         }
+        
         function switchTab(target) {
             currentTab = target;
             currentPage = 1;
@@ -231,6 +252,7 @@
             });
             fetchPosts(currentPage);
         }
+        
         async function fetchPosts(page) {
             contentContainer.innerHTML = '<div class="loading">加载中...</div>';
             try {
@@ -254,6 +276,7 @@
                 renderPosts([{author: "示例用户",avatar: "https://picsum.photos/id/237/200",content: "数据加载失败，这是示例内容",likes: 20,comments: 5,msgid: 0,isLiked: false}]);
             }
         }
+        
         function renderPosts(posts) {
             contentContainer.innerHTML = '';
             if (posts.length === 0) {
@@ -276,16 +299,33 @@
                             <i class="${post.isLiked ? 'fas' : 'far'} fa-heart"></i>
                             <span>点赞(${post.likes})</span>
                         </div>
-                        <div class="action-btn comment-btn">
+                        <div class="action-btn comment-btn" data-msgid="${post.msgid}" data-comments="${post.comments}">
                             <i class="far fa-comment"></i>
                             <span>评论(${post.comments})</span>
+                        </div>
+                    </div>
+                    <div class="comments-container" id="comments-${post.msgid}">
+                        <div class="comments-list" id="comments-list-${post.msgid}"></div>
+                        <div class="comment-pagination" id="comment-pagination-${post.msgid}">
+                            <button class="page-prev comment-prev" data-msgid="${post.msgid}">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="page-next comment-next" data-msgid="${post.msgid}">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="comment-input-container">
+                            <input type="text" class="comment-input" placeholder="输入评论..." id="comment-input-${post.msgid}">
+                            <button class="comment-send" data-msgid="${post.msgid}">发送</button>
                         </div>
                     </div>
                 `;
                 contentContainer.appendChild(postCard);
             });
             bindLikeEvents();
+            bindCommentEvents();
         }
+        
         function bindLikeEvents() {
             document.querySelectorAll('.like-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -295,38 +335,175 @@
                     const msgid = this.dataset.msgid;
                     if (!userId || !msgid) return;
                     
-                    // 立即更新前端状态，不关心后端是否成功
                     if (icon.classList.contains('far')) {
-                        // 点赞
                         icon.classList.remove('far');
                         icon.classList.add('fas');
                         this.classList.add('liked');
                         likes++;
-                        // 发送点赞请求（不处理结果）
                         fetch(`http://192.168.88.101:19200${apiUrls.like}`, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                             body: `userid=${userId}&msgid=${msgid}`
                         }).catch(err => console.error('点赞请求失败:', err));
                     } else {
-                        // 取消点赞
                         icon.classList.remove('fas');
                         icon.classList.add('far');
                         this.classList.remove('liked');
                         likes--;
-                        // 发送取消点赞请求（不处理结果）
                         fetch(`http://192.168.88.101:19200${apiUrls.unlike}`, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                             body: `userid=${userId}&msgid=${msgid}`
                         }).catch(err => console.error('取消点赞请求失败:', err));
                     }
-                    // 更新DOM显示，确保用户实时看到变化
                     this.dataset.likes = likes;
                     text.textContent = `点赞(${likes})`;
                 });
             });
         }
+        
+        function bindCommentEvents() {
+            document.querySelectorAll('.comment-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const msgid = this.dataset.msgid;
+                    const targetContainer = document.getElementById(`comments-${msgid}`);
+                    document.querySelectorAll('.comments-container.expanded').forEach(container => {
+                        if (container.id !== `comments-${msgid}`) {
+                            container.classList.remove('expanded');
+                        }
+                    });
+                    targetContainer.classList.toggle('expanded');
+                    if (targetContainer.classList.contains('expanded')) {
+                        const commentPageKey = `commentPage-${msgid}`;
+                        if (!window[commentPageKey]) window[commentPageKey] = 1;
+                        fetchComments(msgid, window[commentPageKey]);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.comment-prev').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const msgid = this.dataset.msgid;
+                    const commentPageKey = `commentPage-${msgid}`;
+                    const totalPagesKey = `commentTotalPages-${msgid}`;
+                    if (!window[commentPageKey]) window[commentPageKey] = 1;
+                    if (window[commentPageKey] > 1) {
+                        window[commentPageKey]--;
+                        fetchComments(msgid, window[commentPageKey]);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.comment-next').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const msgid = this.dataset.msgid;
+                    const commentPageKey = `commentPage-${msgid}`;
+                    const totalPagesKey = `commentTotalPages-${msgid}`;
+                    if (!window[commentPageKey]) window[commentPageKey] = 1;
+                    if (!window[totalPagesKey]) window[totalPagesKey] = 1;
+                    if (window[commentPageKey] < window[totalPagesKey]) {
+                        window[commentPageKey]++;
+                        fetchComments(msgid, window[commentPageKey]);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.comment-send').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const msgid = this.dataset.msgid;
+                    const input = document.getElementById(`comment-input-${msgid}`);
+                    const text = input.value.trim();
+                    if (!text || !userId) return;
+                    const commentsList = document.getElementById(`comments-list-${msgid}`);
+                    commentsList.innerHTML = '';
+                    fetch(`http://192.168.88.101:19200${apiUrls.postcomment}`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: `userid=${userId}&msgid=${msgid}&txt=${encodeURIComponent(text)}`
+                    }).then(response => {
+                        if (response.ok) {
+                            input.value = '';
+                            const commentBtn = document.querySelector(`.comment-btn[data-msgid="${msgid}"]`);
+                            if (commentBtn) {
+                                let currentComments = parseInt(commentBtn.dataset.comments);
+                                currentComments++;
+                                commentBtn.dataset.comments = currentComments;
+                                commentBtn.querySelector('span').textContent = `评论(${currentComments})`;
+                            }
+                            const commentPageKey = `commentPage-${msgid}`;
+                            fetchComments(msgid, window[commentPageKey] || 1);
+                        }
+                    }).catch(err => console.error('发布评论失败:', err));
+                });
+            });
+        }
+        
+        async function fetchComments(msgid, page) {
+            const commentsList = document.getElementById(`comments-list-${msgid}`);
+            commentsList.innerHTML = '<div class="loading">加载评论中...</div>';
+            try {
+                const response = await fetch(`http://192.168.88.101:19200${apiUrls.getcomment}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `msgid=${msgid}&page=${page}`
+                });
+                if (!response.ok) throw new Error('评论请求失败');
+                const result = await response.json();
+                renderComments(msgid, result.data);
+                renderCommentPagination(msgid, result.totalPages, page);
+                window[`commentTotalPages-${msgid}`] = result.totalPages;
+            } catch (error) {
+                console.error('获取评论失败:', error);
+                renderComments(msgid, [
+                    {author: "评论用户", avatar: "https://picsum.photos/id/1005/200", content: "示例评论内容"}
+                ]);
+            }
+        }
+        
+        function renderComments(msgid, comments) {
+            const commentsList = document.getElementById(`comments-list-${msgid}`);
+            commentsList.innerHTML = '';
+            if (comments.length === 0) {
+                commentsList.innerHTML = '<div style="text-align:center;padding:15px;font-size:14px;color:#666;">暂无评论</div>';
+                return;
+            }
+            comments.forEach(comment => {
+                const commentItem = document.createElement('div');
+                commentItem.className = 'comment-item';
+                commentItem.innerHTML = `
+                    <img src="${comment.avatar}" alt="${comment.author}的头像" class="comment-avatar">
+                    <div class="comment-content">
+                        <div class="comment-author">${comment.author}</div>
+                        <div class="comment-text">${comment.content}</div>
+                    </div>
+                `;
+                commentsList.appendChild(commentItem);
+            });
+        }
+        
+        function renderCommentPagination(msgid, totalPages, currentPage) {
+            const paginationContainer = document.getElementById(`comment-pagination-${msgid}`);
+            while (paginationContainer.children.length > 2) {
+                paginationContainer.removeChild(paginationContainer.children[1]);
+            }
+            const prevBtn = paginationContainer.querySelector('.comment-prev');
+            const nextBtn = paginationContainer.querySelector('.comment-next');
+            for (let i = 1; i <= Math.min(totalPages, maxPageButtons); i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.addEventListener('click', () => {
+                    window[`commentPage-${msgid}`] = i;
+                    fetchComments(msgid, i);
+                });
+                paginationContainer.insertBefore(pageBtn, nextBtn);
+            }
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+            prevBtn.style.opacity = currentPage === 1 ? '0.5' : '1';
+            nextBtn.style.opacity = currentPage === totalPages ? '0.5' : '1';
+        }
+        
         function renderPagination(totalPages, currentPage) {
             const paginationContainer = document.getElementById('paginationContainer');
             const prevBtn = document.getElementById('prevBtn');
