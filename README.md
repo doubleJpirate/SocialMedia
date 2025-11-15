@@ -46,7 +46,7 @@ MYSQL数据库
 默认端口号为19200  
 默认MYSQL相关数据 host:localhost user:root pwd:123456 database:SocialMedia  
 如需更改，请移步text.cpp文件  
-需要在mysql中添加SocialMedia数据库和相关表格 
+需要在mysql中添加SocialMedia数据库和相关表格  
 **另外，前端代码中和task中响应报文的"192.168.88.101"需要更换为运行服务器的ip地址！！！**  
 ``` bash
 #进入数据库后执行以下命令

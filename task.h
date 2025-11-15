@@ -49,6 +49,12 @@ private:
     void delLike();
     void getComment();
     void postComment();
+    void profilePage();
+    void changemsg();
+    void uploadavatar();
+    void setFollow();
+    void delFollow();
+
 
 private:
     std::string m_method;//以下三个为http报文请求头
@@ -75,7 +81,8 @@ private:
     void sendMainHtml();
     void sendBackMsg();
     void sendImg();
-    void sendPublishRes();
+    void sendBackRes();
+    void sendImgRes();
     
 private:
     int m_type;//表示回复消息类型

@@ -11,13 +11,15 @@
         .header-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: center; height: 60px; }
         .logo { font-size: 22px; font-weight: bold; color: #2d8cf0; text-decoration: none; }
         .publish-btn { position: absolute; right: 20px; background-color: #2d8cf0; color: white; border: none; padding: 6px 16px; border-radius: 18px; font-size: 14px; font-weight: 500; }
-        .user-avatar { position: absolute; left: 20px; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid transparent; }
+        .user-info { position: absolute; left: 20px; display: flex; align-items: center; gap: 10px; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; cursor: pointer; }
+        .user-name { font-size: 14px; font-weight: 500; color: #333; }
         .main { max-width: 1200px; margin: 80px auto 0; display: flex; gap: 20px; }
         .content { flex: 1; }
         .sidebar { width: 280px; flex-shrink: 0; }
         .post-card { background-color: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px; padding: 15px; }
         .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .post-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+        .post-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; cursor: pointer; }
         .post-author { flex: 1; }
         .author-name { font-weight: 600; font-size: 15px; color: #333; }
         .post-content { font-size: 14px; line-height: 1.6; margin-bottom: 15px; color: #333; }
@@ -53,7 +55,7 @@
         .comments-container { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 1px solid #f5f5f5; margin-top: 10px; }
         .comments-container.expanded { max-height: 500px; padding-top: 15px; }
         .comment-item { display: flex; gap: 12px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f5f5f5; }
-        .comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; cursor: pointer; flex-shrink: 0; }
         .comment-content { flex: 1; }
         .comment-author { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
         .comment-text { font-size: 14px; color: #333; line-height: 1.5; }
@@ -61,15 +63,43 @@
         .comment-input-container { display: flex; gap: 10px; padding-top: 15px; border-top: 1px solid #f5f5f5; }
         .comment-input { flex: 1; padding: 8px 12px; border: 1px solid #eee; border-radius: 20px; outline: none; font-size: 14px; }
         .comment-send { padding: 8px 16px; background-color: #2d8cf0; color: white; border: none; border-radius: 20px; font-size: 14px; cursor: pointer; }
-        @media (max-width: 768px) { .sidebar { display: none; } .mobile-nav { display: block; } }
-        @media (max-width: 480px) { .header-container { padding: 0 15px; } }
+        .profile-container { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: #fff; z-index: 300; padding: 20px; overflow-y: auto; }
+        .profile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; height: 60px; }
+        .profile-content { max-width: 800px; margin: 0 auto; }
+        .profile-avatar-container { text-align: center; margin-bottom: 20px; }
+        .profile-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f7ff; cursor: pointer; }
+        .profile-name { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 10px; }
+        .profile-personality { text-align: center; color: #666; margin-bottom: 30px; padding: 0 20px; word-break: break-all; }
+        .profile-stats { display: flex; justify-content: center; gap: 40px; margin-bottom: 30px; }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 22px; font-weight: 600; color: #2d8cf0; }
+        .stat-label { font-size: 14px; color: #666; }
+        .profile-actions { text-align: center; margin-bottom: 40px; }
+        .follow-btn { padding: 8px 24px; border-radius: 20px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        .follow-btn.following { background-color: #f5f5f5; color: #333; border: 1px solid #eee; }
+        .follow-btn.not-following { background-color: #2d8cf0; color: white; border: none; }
+        .edit-btn { padding: 8px 24px; background-color: #f5f5f5; color: #333; border: 1px solid #eee; border-radius: 20px; font-size: 14px; cursor: pointer; margin-right: 10px; }
+        .profile-edit-inputs { display: none; max-width: 500px; margin: 0 auto 30px; gap: 15px; flex-direction: column; }
+        .profile-edit-inputs.active { display: flex; }
+        .edit-input-item { width: 100%; }
+        .edit-input-label { display: block; margin-bottom: 5px; font-size: 14px; color: #666; }
+        .edit-input { width: 100%; padding: 10px 15px; border: 1px solid #eee; border-radius: 8px; outline: none; font-size: 15px; }
+        .edit-textarea { width: 100%; padding: 10px 15px; border: 1px solid #eee; border-radius: 8px; outline: none; font-size: 15px; min-height: 100px; resize: vertical; }
+        .save-btn { padding: 8px 24px; background-color: #2d8cf0; color: white; border: none; border-radius: 20px; font-size: 14px; cursor: pointer; margin-right: 10px; }
+        .cancel-btn { padding: 8px 24px; background-color: #f5f5f5; color: #333; border: 1px solid #eee; border-radius: 20px; font-size: 14px; cursor: pointer; }
+        .hidden { display: none; }
+        @media (max-width: 768px) { .sidebar { display: none; } .mobile-nav { display: block; } .user-name { display: none; } }
+        @media (max-width: 480px) { .header-container { padding: 0 15px; } .profile-stats { gap: 20px; } }
     </style>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header class="header">
         <div class="header-container">
-            <img src="https://picsum.photos/id/64/200" alt="用户头像" class="user-avatar">
+            <div class="user-info">
+                <img src="" alt="用户头像" class="user-avatar" id="headerAvatar" data-username="">
+                <span class="user-name" id="headerUsername"></span>
+            </div>
             <a href="#" class="logo">极简社交</a>
             <button class="publish-btn" id="mainPublishBtn">
                 <i class="fas fa-plus"></i> 发布
@@ -144,16 +174,61 @@
     </div>
     <div class="publish-container" id="publishContainer">
         <div class="publish-header">
-            <button class="back-btn" id="backBtn">返回</button>
+            <button class="back-btn" id="publishBackBtn">返回</button>
             <button class="send-btn" id="sendBtn">发送</button>
         </div>
         <textarea class="publish-input" placeholder="输入内容..." id="publishInput"></textarea>
     </div>
+    <div class="profile-container" id="profileContainer">
+        <div class="profile-header">
+            <button class="back-btn" id="profileBackBtn">返回</button>
+            <span class="logo">个人主页</span>
+        </div>
+        <div class="profile-content">
+            <div class="profile-avatar-container">
+                <img src="" alt="用户头像" class="profile-avatar" id="profileAvatar">
+            </div>
+            <div class="profile-name" id="profileName"></div>
+            <div class="profile-personality" id="profilePersonality">这个人很懒，什么都没留下</div>
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="followCount">0</div>
+                    <div class="stat-label">关注</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="fanCount">0</div>
+                    <div class="stat-label">粉丝</div>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button class="edit-btn hidden" id="editBtn">编辑资料</button>
+                <button class="follow-btn not-following" id="followBtn">关注</button>
+            </div>
+            <div class="profile-edit-inputs" id="profileEditInputs">
+                <div class="edit-input-item">
+                    <label class="edit-input-label" for="editName">用户名</label>
+                    <input type="text" class="edit-input" id="editName" placeholder="输入用户名">
+                </div>
+                <div class="edit-input-item">
+                    <label class="edit-input-label" for="editPersonality">个性签名</label>
+                    <textarea class="edit-textarea" id="editPersonality" placeholder="输入个性签名"></textarea>
+                </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <button class="save-btn" id="saveEditBtn">保存</button>
+                    <button class="cancel-btn" id="cancelEditBtn">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <input type="file" id="avatarUploadInput" accept="image/*" style="display: none;">
     <script>
         let currentPage = 1;
         const maxPageButtons = 5;
         let currentTab = 'discover';
         let userId = '';
+        let username = '';
+        let avatarUrl = '';
+        let currentProfileUsername = '';
         const apiUrls = {
             discover: '/api/find',
             attention: '/api/attention',
@@ -162,32 +237,52 @@
             like: '/api/like',
             unlike: '/api/unlike',
             getcomment: '/api/getcomment',
-            postcomment: '/api/postcomment'
+            postcomment: '/api/postcomment',
+            profile: '/api/profilepage',
+            follow: '/api/follow',
+            unfollow: '/api/unfollow',
+            changemsg: '/api/changemsg',
+            uploadavatar: '/api/uploadavatar'
         };
         const mainElements = document.querySelectorAll('.header, .main, .mobile-nav, .pagination');
         const publishContainer = document.getElementById('publishContainer');
         const publishInput = document.getElementById('publishInput');
         const contentContainer = document.getElementById('contentContainer');
+        const headerAvatar = document.getElementById('headerAvatar');
+        const headerUsername = document.getElementById('headerUsername');
+        const profileContainer = document.getElementById('profileContainer');
+        const avatarUploadInput = document.getElementById('avatarUploadInput');
         
         document.addEventListener('DOMContentLoaded', () => {
-            getUserId();
+            getUserInfo();
             fetchPosts(currentPage);
             bindNavEvents();
             bindPublishEvents();
+            bindProfileEvents();
         });
         
-        function getUserId() {
+        function getUserInfo() {
             const storedUid = localStorage.getItem('uid');
-            if (storedUid) {
-                userId = storedUid;
-                return;
+            const storedName = localStorage.getItem('username');
+            const storedAvatar = localStorage.getItem('avatar');
+            if (storedUid) userId = storedUid;
+            if (storedName) username = storedName;
+            if (storedAvatar) avatarUrl = storedAvatar;
+            headerAvatar.dataset.username = username;
+            if (!storedUid) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlId = urlParams.get('id');
+                if (urlId) {
+                    userId = decodeURIComponent(urlId);
+                    localStorage.setItem('uid', userId);
+                }
             }
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlId = urlParams.get('id');
-            if (urlId) {
-                userId = decodeURIComponent(urlId);
-                localStorage.setItem('uid', userId);
-            }
+            updateHeaderUserInfo();
+        }
+        
+        function updateHeaderUserInfo() {
+            if (avatarUrl) headerAvatar.src = avatarUrl;
+            if (username) headerUsername.textContent = username;
         }
         
         function bindNavEvents() {
@@ -210,8 +305,167 @@
         
         function bindPublishEvents() {
             document.getElementById('mainPublishBtn').addEventListener('click', showPublishPage);
-            document.getElementById('backBtn').addEventListener('click', hidePublishPage);
+            document.getElementById('publishBackBtn').addEventListener('click', hidePublishPage);
             document.getElementById('sendBtn').addEventListener('click', sendPost);
+        }
+        
+        function bindProfileEvents() {
+            document.addEventListener('click', (e) => {
+                const avatar = e.target.closest('.user-avatar, .post-avatar, .comment-avatar, .profile-avatar');
+                if (avatar) {
+                    const targetUsername = avatar.dataset.username;
+                    if (targetUsername) {
+                        if (targetUsername === username && profileContainer.style.display === 'block') {
+                            avatarUploadInput.click();
+                        } else if (targetUsername) {
+                            showProfilePage(targetUsername);
+                        }
+                    }
+                }
+            });
+            document.getElementById('profileBackBtn').addEventListener('click', hideProfilePage);
+            document.getElementById('editBtn').addEventListener('click', showEditInputs);
+            document.getElementById('cancelEditBtn').addEventListener('click', hideEditInputs);
+            document.getElementById('saveEditBtn').addEventListener('click', saveProfileEdit);
+            document.getElementById('followBtn').addEventListener('click', toggleFollow);
+            avatarUploadInput.addEventListener('change', handleAvatarUpload);
+        }
+        
+        function showProfilePage(targetUsername) {
+            currentProfileUsername = targetUsername;
+            mainElements.forEach(el => el.style.display = 'none');
+            publishContainer.style.display = 'none';
+            profileContainer.style.display = 'block';
+            fetchProfileData(targetUsername);
+        }
+        
+        function hideProfilePage() {
+            profileContainer.style.display = 'none';
+            mainElements.forEach(el => el.style.display = '');
+            currentProfileUsername = '';
+        }
+        
+        async function fetchProfileData(targetUsername) {
+            try {
+                const formData = `username=${encodeURIComponent(targetUsername)}&userid=${encodeURIComponent(userId)}`;
+                const response = await fetch(`http://192.168.88.101:19200${apiUrls.profile}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData
+                });
+                if (!response.ok) throw new Error('获取个人资料失败');
+                const data = await response.json();
+                document.getElementById('profileAvatar').src = data.avatar || 'https://picsum.photos/id/64/200';
+                document.getElementById('profileAvatar').dataset.username = data.username;
+                document.getElementById('profileName').textContent = data.username || '未知用户';
+                document.getElementById('profilePersonality').textContent = data.personality || '这个人很懒，什么都没留下';
+                document.getElementById('followCount').textContent = data.followCount || 0;
+                document.getElementById('fanCount').textContent = data.fanCount || 0;
+                document.getElementById('editName').value = data.username || '';
+                document.getElementById('editPersonality').value = data.personality || '';
+                const isCurrentUser = currentProfileUsername === username;
+                document.getElementById('editBtn').classList.toggle('hidden', !isCurrentUser);
+                document.getElementById('followBtn').classList.toggle('hidden', isCurrentUser);
+                const followBtn = document.getElementById('followBtn');
+                if (data.isFollowed) {
+                    followBtn.classList.remove('not-following');
+                    followBtn.classList.add('following');
+                    followBtn.textContent = '已关注';
+                } else {
+                    followBtn.classList.remove('following');
+                    followBtn.classList.add('not-following');
+                    followBtn.textContent = '关注';
+                }
+            } catch (error) {
+                console.error('获取个人资料失败:', error);
+            }
+        }
+        
+        function showEditInputs() {
+            document.getElementById('profileEditInputs').classList.add('active');
+        }
+        
+        function hideEditInputs() {
+            document.getElementById('profileEditInputs').classList.remove('active');
+        }
+        
+        async function saveProfileEdit() {
+            const newName = document.getElementById('editName').value.trim();
+            const newPersonality = document.getElementById('editPersonality').value.trim();
+            if (!newName || !userId) return;
+            try {
+                await fetch(`http://192.168.88.101:19200${apiUrls.changemsg}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `id=${userId}&name=${encodeURIComponent(newName)}&personality=${encodeURIComponent(newPersonality)}`
+                });
+                document.getElementById('profileName').textContent = newName;
+                document.getElementById('profilePersonality').textContent = newPersonality || '这个人很懒，什么都没留下';
+                headerUsername.textContent = newName;
+                localStorage.setItem('username', newName);
+                username = newName;
+                hideEditInputs();
+            } catch (error) {
+                console.error('保存资料失败:', error);
+            }
+        }
+        
+        function toggleFollow() {
+            const followBtn = document.getElementById('followBtn');
+            const fanCountEl = document.getElementById('fanCount');
+            let fanCount = parseInt(fanCountEl.textContent) || 0;
+            const targetUsername = currentProfileUsername;
+            const myId = userId;
+            if (followBtn.classList.contains('not-following')) {
+                followBtn.classList.remove('not-following');
+                followBtn.classList.add('following');
+                followBtn.textContent = '已关注';
+                fanCountEl.textContent = fanCount + 1;
+                fetch(`http://192.168.88.101:19200${apiUrls.follow}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `myid=${myId}&upname=${encodeURIComponent(targetUsername)}`
+                }).catch(err => console.error('关注请求失败:', err));
+            } else {
+                followBtn.classList.remove('following');
+                followBtn.classList.add('not-following');
+                followBtn.textContent = '关注';
+                fanCountEl.textContent = Math.max(0, fanCount - 1);
+                fetch(`http://192.168.88.101:19200${apiUrls.unfollow}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `myid=${myId}&upname=${encodeURIComponent(targetUsername)}`
+                }).catch(err => console.error('取消关注请求失败:', err));
+            }
+        }
+        
+        async function handleAvatarUpload(e) {
+            const file = e.target.files[0];
+            if (!file || !userId) return;
+            const formData = new FormData();
+            formData.append('userid', userId);
+            formData.append('avatar', file);
+            try {
+                const response = await fetch(`http://192.168.88.101:19200${apiUrls.uploadavatar}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.status === 200) {
+                    const newAvatarUrl = result.data.headimg + `?t=${Date.now()}`;
+                    document.getElementById('profileAvatar').src = newAvatarUrl;
+                    headerAvatar.src = newAvatarUrl;
+                    localStorage.setItem('avatar', newAvatarUrl);
+                    avatarUrl = newAvatarUrl;
+                    alert(result.message);
+                } else {
+                    alert(`上传失败：${result.message}`);
+                }
+            } catch (error) {
+                console.error('头像上传失败:', error);
+                alert('网络错误，上传失败');
+            }
+            avatarUploadInput.value = '';
         }
         
         function showPublishPage() {
@@ -288,7 +542,7 @@
                 postCard.className = 'post-card';
                 postCard.innerHTML = `
                     <div class="post-header">
-                        <img src="${post.avatar}" alt="${post.author}的头像" class="post-avatar">
+                        <img src="${post.avatar}" alt="${post.author}的头像" class="post-avatar" data-username="${post.author}">
                         <div class="post-author">
                             <div class="author-name">${post.author}</div>
                         </div>
@@ -334,7 +588,6 @@
                     let likes = parseInt(this.dataset.likes);
                     const msgid = this.dataset.msgid;
                     if (!userId || !msgid) return;
-                    
                     if (icon.classList.contains('far')) {
                         icon.classList.remove('far');
                         icon.classList.add('fas');
@@ -380,7 +633,6 @@
                     }
                 });
             });
-
             document.querySelectorAll('.comment-prev').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const msgid = this.dataset.msgid;
@@ -393,7 +645,6 @@
                     }
                 });
             });
-
             document.querySelectorAll('.comment-next').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const msgid = this.dataset.msgid;
@@ -407,7 +658,6 @@
                     }
                 });
             });
-
             document.querySelectorAll('.comment-send').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const msgid = this.dataset.msgid;
@@ -455,7 +705,7 @@
             } catch (error) {
                 console.error('获取评论失败:', error);
                 renderComments(msgid, [
-                    {author: "评论用户", avatar: "https://picsum.photos/id/1005/200", content: "示例评论内容"}
+                    {author: "评论用户", avatar: "https://picsum.photos/id/1005/200", content: "示例评论内容", username: "评论用户"}
                 ]);
             }
         }
@@ -471,7 +721,7 @@
                 const commentItem = document.createElement('div');
                 commentItem.className = 'comment-item';
                 commentItem.innerHTML = `
-                    <img src="${comment.avatar}" alt="${comment.author}的头像" class="comment-avatar">
+                    <img src="${comment.avatar}" alt="${comment.author}的头像" class="comment-avatar" data-username="${comment.username || comment.author}">
                     <div class="comment-content">
                         <div class="comment-author">${comment.author}</div>
                         <div class="comment-text">${comment.content}</div>
