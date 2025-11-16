@@ -4,7 +4,13 @@
 
 ### 开发情况
 （目前版本几乎没有错误处理）  
-其他基本功能都已正常实现，上传图片功能出现问题
+基本功能都已经实现  
+下一步准备增加错误检验  
+
+目前上传图片支持的大小可能很有限  
+实测下来大概20k的图片可以秒传，200k的图片大概率上传失败  
+不太清楚为什么，后面再优化吧  
+这个项目开始本意就是想写一个最小可执行版本  
 
 ### 技术栈
 **网络模型** ：Reactor 模型  
@@ -12,38 +18,43 @@
 **数据库** : MySQL  
 **并发处理** ：线程池（生产者 - 消费者模型）  
 **开发语言** ：C++（使用 C++11 标准）  
+**构建工具** ：cmake  
 **前端页面** ：HTML + Tailwind CSS + JavaScript（AI生成）  
 
 ### 整体流程
-目前项目main函数位于text.cpp  
+项目main函数位于main.cpp  
+
 首先对线程池进行初始化  
 然后对套接字和epoll进行初始化，随后进入正式的通信过程  
 由epoll监听i/o事件  
 检测到事件后将事件丢进线程池  
 线程池中完成对接收信息的解析和分发以及发送响应数据  
+对于不同的http请求报文做出不同响应  
 
 **task文件** ：封装一个任务多态类，用于统一接口，主要的工作函数都在这里  
 **threadpool文件** ：封装线程池，本项目需要多个文件访问同一个线程池，这里使用命名空间封装全局函数和全局变量实现  
 **tool文件** ：包含多个类需要使用的方法  
 **webserver文件** ：封装了服务器通信函数，主要的通信逻辑都在这里  
-**database文件** : 封装了MySQL相关接口
+**database文件** : 封装了MySQL相关接口  
 
 ### 拉取该项目
 ``` bash
-git clone https://github.com/doubleJpirate/SocialMedia.git
+git clone https://github.com/doubleJpirate/SocialMedia.git  
 ```
 ### 测试方式(测试时请务必保证网络通畅)
-http://[服务器IP地址]:19200
+http://[服务器IP地址]:19200  
 
 ### 运行环境
 Linux系统  
 g++编译器  
+cmake、make工具  
 MYSQL数据库  
 
 ### 其他配置
 默认端口号为19200  
 默认MYSQL相关数据 host:localhost user:root pwd:123456 database:SocialMedia  
 如需更改，请移步text.cpp文件  
+目前要改的话要ctrl+H挨个替换，后面可能用全局宏定义修改  
 需要在mysql中添加SocialMedia数据库和相关表格  
 **另外，前端代码中和task中响应报文的"192.168.88.101"需要更换为运行服务器的ip地址！！！**  
 ``` bash
@@ -95,8 +106,12 @@ CREATE TABLE `Comments` (
 
 ### 编译与运行
 ```bash
-g++ -std=c++11 *.cpp -o text -pthread -lmysqlclient
-./text
+#使用cmake工具编译
+mkdir build
+cd build
+cmake ..
+cmake --build .
+./sociald
 ```
 
 ### 参考项目
@@ -104,4 +119,12 @@ Reactor模型参考 https://github.com/shangguanyongshi/WebFileServer
 MySQL相关接口参考 https://github.com/primer9999/MysqlPool  
 
 ### 其他
-前端代码由AI生成
+前端代码由AI生成  
+
+
+### 运行结果展示
+![项目执行结果](https://raw.githubusercontent.com/doubleJpirate/my_project_imgs/refs/heads/main/logedge.png "登录/注册页面")  
+
+![项目执行结果](https://raw.githubusercontent.com/doubleJpirate/my_project_imgs/refs/heads/main/mainedge.png "主页面")  
+
+![项目执行结果](https://raw.githubusercontent.com/doubleJpirate/my_project_imgs/refs/heads/main/proedge.png "用户页面")  

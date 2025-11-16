@@ -14,6 +14,20 @@
         .user-info { position: absolute; left: 20px; display: flex; align-items: center; gap: 10px; }
         .user-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; cursor: pointer; }
         .user-name { font-size: 14px; font-weight: 500; color: #333; }
+        /* 新增退出登录按钮样式 */
+        .logout-btn {
+            background-color: transparent;
+            color: #666;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+        .logout-btn:hover {
+            color: #f53f3f; /* hover时变红提示 */
+        }
         .main { max-width: 1200px; margin: 80px auto 0; display: flex; gap: 20px; }
         .content { flex: 1; }
         .sidebar { width: 280px; flex-shrink: 0; }
@@ -88,8 +102,17 @@
         .save-btn { padding: 8px 24px; background-color: #2d8cf0; color: white; border: none; border-radius: 20px; font-size: 14px; cursor: pointer; margin-right: 10px; }
         .cancel-btn { padding: 8px 24px; background-color: #f5f5f5; color: #333; border: 1px solid #eee; border-radius: 20px; font-size: 14px; cursor: pointer; }
         .hidden { display: none; }
-        @media (max-width: 768px) { .sidebar { display: none; } .mobile-nav { display: block; } .user-name { display: none; } }
-        @media (max-width: 480px) { .header-container { padding: 0 15px; } .profile-stats { gap: 20px; } }
+        @media (max-width: 768px) { 
+            .sidebar { display: none; } 
+            .mobile-nav { display: block; } 
+            .user-name { display: none; } 
+            /* 移动端退出按钮样式调整 */
+            .logout-btn { font-size: 12px; }
+        }
+        @media (max-width: 480px) { 
+            .header-container { padding: 0 15px; } 
+            .profile-stats { gap: 20px; } 
+        }
     </style>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -99,6 +122,8 @@
             <div class="user-info">
                 <img src="" alt="用户头像" class="user-avatar" id="headerAvatar" data-username="">
                 <span class="user-name" id="headerUsername"></span>
+                <!-- 新增退出登录按钮 -->
+                <button class="logout-btn" id="logoutBtn">退出</button>
             </div>
             <a href="#" class="logo">极简社交</a>
             <button class="publish-btn" id="mainPublishBtn">
@@ -186,7 +211,7 @@
         </div>
         <div class="profile-content">
             <div class="profile-avatar-container">
-                <img src="" alt="用户头像" class="profile-avatar" id="profileAvatar">
+                <img src="" alt="用户头像" class="profile-avatar" id="profileAvatar" data-username="">
             </div>
             <div class="profile-name" id="profileName"></div>
             <div class="profile-personality" id="profilePersonality">这个人很懒，什么都没留下</div>
@@ -259,6 +284,7 @@
             bindNavEvents();
             bindPublishEvents();
             bindProfileEvents();
+            bindLogoutEvent(); // 绑定退出登录事件
         });
         
         function getUserInfo() {
@@ -331,6 +357,19 @@
             avatarUploadInput.addEventListener('change', handleAvatarUpload);
         }
         
+        // 新增：绑定退出登录事件
+        function bindLogoutEvent() {
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                // 清除本地存储的用户信息
+                localStorage.removeItem('uid');
+                localStorage.removeItem('username');
+                localStorage.removeItem('avatar');
+                
+                // 跳转到指定地址
+                window.location.href = 'http://192.168.88.101:19200';
+            });
+        }
+        
         function showProfilePage(targetUsername) {
             currentProfileUsername = targetUsername;
             mainElements.forEach(el => el.style.display = 'none');
@@ -346,42 +385,45 @@
         }
         
         async function fetchProfileData(targetUsername) {
-            try {
-                const formData = `username=${encodeURIComponent(targetUsername)}&userid=${encodeURIComponent(userId)}`;
-                const response = await fetch(`http://192.168.88.101:19200${apiUrls.profile}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: formData
-                });
-                if (!response.ok) throw new Error('获取个人资料失败');
-                const data = await response.json();
-                document.getElementById('profileAvatar').src = data.avatar || 'https://picsum.photos/id/64/200';
-                document.getElementById('profileAvatar').dataset.username = data.username;
-                document.getElementById('profileName').textContent = data.username || '未知用户';
-                document.getElementById('profilePersonality').textContent = data.personality || '这个人很懒，什么都没留下';
-                document.getElementById('followCount').textContent = data.followCount || 0;
-                document.getElementById('fanCount').textContent = data.fanCount || 0;
-                document.getElementById('editName').value = data.username || '';
-                document.getElementById('editPersonality').value = data.personality || '';
-                const isCurrentUser = currentProfileUsername === username;
-                document.getElementById('editBtn').classList.toggle('hidden', !isCurrentUser);
-                document.getElementById('followBtn').classList.toggle('hidden', isCurrentUser);
-                const followBtn = document.getElementById('followBtn');
-                if (data.isFollowed) {
-                    followBtn.classList.remove('not-following');
-                    followBtn.classList.add('following');
-                    followBtn.textContent = '已关注';
-                } else {
-                    followBtn.classList.remove('following');
-                    followBtn.classList.add('not-following');
-                    followBtn.textContent = '关注';
-                }
-            } catch (error) {
-                console.error('获取个人资料失败:', error);
+            const formData = `username=${encodeURIComponent(targetUsername)}&userid=${encodeURIComponent(userId)}`;
+            const response = await fetch(`http://192.168.88.101:19200${apiUrls.profile}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: formData
+            });
+            const data = await response.json();
+            
+            const avatarUrlWithTimestamp = data.avatar ? `${data.avatar}?t=${Date.now()}` : 'https://picsum.photos/id/64/200';
+            const profileAvatar = document.getElementById('profileAvatar');
+            profileAvatar.src = avatarUrlWithTimestamp;
+            profileAvatar.dataset.username = data.username;
+            
+            document.getElementById('profileName').textContent = data.username;
+            document.getElementById('profilePersonality').textContent = data.personality;
+            document.getElementById('followCount').textContent = data.followCount;
+            document.getElementById('fanCount').textContent = data.fanCount;
+            
+            const isCurrentUser = currentProfileUsername === username;
+            document.getElementById('editBtn').classList.toggle('hidden', !isCurrentUser);
+            document.getElementById('followBtn').classList.toggle('hidden', isCurrentUser);
+            
+            const followBtn = document.getElementById('followBtn');
+            if (data.isFollowed) {
+                followBtn.classList.remove('not-following');
+                followBtn.classList.add('following');
+                followBtn.textContent = '已关注';
+            } else {
+                followBtn.classList.remove('following');
+                followBtn.classList.add('not-following');
+                followBtn.textContent = '关注';
             }
         }
         
         function showEditInputs() {
+            const currentName = document.getElementById('profileName').textContent;
+            const currentPersonality = document.getElementById('profilePersonality').textContent;
+            document.getElementById('editName').value = currentName;
+            document.getElementById('editPersonality').value = currentPersonality;
             document.getElementById('profileEditInputs').classList.add('active');
         }
         
@@ -393,21 +435,17 @@
             const newName = document.getElementById('editName').value.trim();
             const newPersonality = document.getElementById('editPersonality').value.trim();
             if (!newName || !userId) return;
-            try {
-                await fetch(`http://192.168.88.101:19200${apiUrls.changemsg}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: `id=${userId}&name=${encodeURIComponent(newName)}&personality=${encodeURIComponent(newPersonality)}`
-                });
-                document.getElementById('profileName').textContent = newName;
-                document.getElementById('profilePersonality').textContent = newPersonality || '这个人很懒，什么都没留下';
-                headerUsername.textContent = newName;
-                localStorage.setItem('username', newName);
-                username = newName;
-                hideEditInputs();
-            } catch (error) {
-                console.error('保存资料失败:', error);
-            }
+            await fetch(`http://192.168.88.101:19200${apiUrls.changemsg}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `id=${userId}&name=${encodeURIComponent(newName)}&personality=${encodeURIComponent(newPersonality)}`
+            });
+            document.getElementById('profileName').textContent = newName;
+            document.getElementById('profilePersonality').textContent = newPersonality;
+            headerUsername.textContent = newName;
+            localStorage.setItem('username', newName);
+            username = newName;
+            hideEditInputs();
         }
         
         function toggleFollow() {
@@ -425,7 +463,7 @@
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     body: `myid=${myId}&upname=${encodeURIComponent(targetUsername)}`
-                }).catch(err => console.error('关注请求失败:', err));
+                });
             } else {
                 followBtn.classList.remove('following');
                 followBtn.classList.add('not-following');
@@ -435,35 +473,48 @@
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     body: `myid=${myId}&upname=${encodeURIComponent(targetUsername)}`
-                }).catch(err => console.error('取消关注请求失败:', err));
+                });
             }
         }
         
         async function handleAvatarUpload(e) {
             const file = e.target.files[0];
             if (!file || !userId) return;
-            const formData = new FormData();
-            formData.append('userid', userId);
-            formData.append('avatar', file);
-            try {
-                const response = await fetch(`http://192.168.88.101:19200${apiUrls.uploadavatar}`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                if (result.status === 200) {
-                    const newAvatarUrl = result.data.headimg + `?t=${Date.now()}`;
-                    document.getElementById('profileAvatar').src = newAvatarUrl;
-                    headerAvatar.src = newAvatarUrl;
-                    localStorage.setItem('avatar', newAvatarUrl);
-                    avatarUrl = newAvatarUrl;
-                    alert(result.message);
-                } else {
-                    alert(`上传失败：${result.message}`);
-                }
-            } catch (error) {
-                console.error('头像上传失败:', error);
-                alert('网络错误，上传失败');
+
+            const pngBlob = await new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    canvas.toBlob(blob => resolve(blob), 'image/png');
+                };
+                const reader = new FileReader();
+                reader.onload = (e) => img.src = e.target.result;
+                reader.readAsDataURL(file);
+            });
+
+            const uploadUrl = `http://192.168.88.101:19200${apiUrls.uploadavatar}?id=${encodeURIComponent(userId)}`;
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                body: pngBlob,
+                headers: {'Content-Type': 'image/png'}
+            });
+
+            const result = await response.json();
+            if (result.status === 200) {
+                const newAvatarUrl = `http://192.168.88.101:19200${result.data.headimg}?t=${Date.now()}`;
+                document.getElementById('profileAvatar').src = newAvatarUrl;
+                headerAvatar.src = newAvatarUrl;
+                localStorage.setItem('avatar', newAvatarUrl);
+                avatarUrl = newAvatarUrl;
+                alert(result.message);
+            } else {
+                alert(`上传失败：${result.message}`);
             }
             avatarUploadInput.value = '';
         }
@@ -483,18 +534,14 @@
         async function sendPost() {
             const text = publishInput.value.trim();
             if (!text || !userId) return;
-            try {
-                const response = await fetch(`http://192.168.88.101:19200${apiUrls.publish}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: `id=${userId}&text=${encodeURIComponent(text)}`
-                });
-                if (response.ok) {
-                    hidePublishPage();
-                    fetchPosts(currentPage);
-                }
-            } catch (error) {
-                console.error('发布失败:', error);
+            const response = await fetch(`http://192.168.88.101:19200${apiUrls.publish}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `id=${userId}&text=${encodeURIComponent(text)}`
+            });
+            if (response.ok) {
+                hidePublishPage();
+                fetchPosts(currentPage);
             }
         }
         
@@ -509,26 +556,19 @@
         
         async function fetchPosts(page) {
             contentContainer.innerHTML = '<div class="loading">加载中...</div>';
-            try {
-                const apiUrl = apiUrls[currentTab];
-                if (!apiUrl) throw new Error('未知的导航目标');
-                let formData = `page=${page}`;
-                if (userId) {
-                    formData += `&id=${userId}`;
-                }
-                const response = await fetch(`http://192.168.88.101:19200${apiUrl}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: formData
-                });
-                if (!response.ok) throw new Error('请求失败');
-                const result = await response.json();
-                renderPosts(result.data);
-                renderPagination(result.totalPages, page);
-            } catch (error) {
-                console.error('获取数据失败:', error);
-                renderPosts([{author: "示例用户",avatar: "https://picsum.photos/id/237/200",content: "数据加载失败，这是示例内容",likes: 20,comments: 5,msgid: 0,isLiked: false}]);
+            const apiUrl = apiUrls[currentTab];
+            let formData = `page=${page}`;
+            if (userId) {
+                formData += `&id=${userId}`;
             }
+            const response = await fetch(`http://192.168.88.101:19200${apiUrl}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: formData
+            });
+            const result = await response.json();
+            renderPosts(result.data);
+            renderPagination(result.totalPages, page);
         }
         
         function renderPosts(posts) {
@@ -538,11 +578,13 @@
                 return;
             }
             posts.forEach(post => {
+                const avatarUrlWithTimestamp = post.avatar ? `${post.avatar}?t=${Date.now()}` : post.avatar;
+                
                 const postCard = document.createElement('div');
                 postCard.className = 'post-card';
                 postCard.innerHTML = `
                     <div class="post-header">
-                        <img src="${post.avatar}" alt="${post.author}的头像" class="post-avatar" data-username="${post.author}">
+                        <img src="${avatarUrlWithTimestamp}" alt="${post.author}的头像" class="post-avatar" data-username="${post.author}">
                         <div class="post-author">
                             <div class="author-name">${post.author}</div>
                         </div>
@@ -597,7 +639,7 @@
                             method: 'POST',
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                             body: `userid=${userId}&msgid=${msgid}`
-                        }).catch(err => console.error('点赞请求失败:', err));
+                        });
                     } else {
                         icon.classList.remove('fas');
                         icon.classList.add('far');
@@ -607,7 +649,7 @@
                             method: 'POST',
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                             body: `userid=${userId}&msgid=${msgid}`
-                        }).catch(err => console.error('取消点赞请求失败:', err));
+                        });
                     }
                     this.dataset.likes = likes;
                     text.textContent = `点赞(${likes})`;
@@ -637,7 +679,6 @@
                 btn.addEventListener('click', function() {
                     const msgid = this.dataset.msgid;
                     const commentPageKey = `commentPage-${msgid}`;
-                    const totalPagesKey = `commentTotalPages-${msgid}`;
                     if (!window[commentPageKey]) window[commentPageKey] = 1;
                     if (window[commentPageKey] > 1) {
                         window[commentPageKey]--;
@@ -683,7 +724,7 @@
                             const commentPageKey = `commentPage-${msgid}`;
                             fetchComments(msgid, window[commentPageKey] || 1);
                         }
-                    }).catch(err => console.error('发布评论失败:', err));
+                    });
                 });
             });
         }
@@ -691,23 +732,15 @@
         async function fetchComments(msgid, page) {
             const commentsList = document.getElementById(`comments-list-${msgid}`);
             commentsList.innerHTML = '<div class="loading">加载评论中...</div>';
-            try {
-                const response = await fetch(`http://192.168.88.101:19200${apiUrls.getcomment}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: `msgid=${msgid}&page=${page}`
-                });
-                if (!response.ok) throw new Error('评论请求失败');
-                const result = await response.json();
-                renderComments(msgid, result.data);
-                renderCommentPagination(msgid, result.totalPages, page);
-                window[`commentTotalPages-${msgid}`] = result.totalPages;
-            } catch (error) {
-                console.error('获取评论失败:', error);
-                renderComments(msgid, [
-                    {author: "评论用户", avatar: "https://picsum.photos/id/1005/200", content: "示例评论内容", username: "评论用户"}
-                ]);
-            }
+            const response = await fetch(`http://192.168.88.101:19200${apiUrls.getcomment}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `msgid=${msgid}&page=${page}`
+            });
+            const result = await response.json();
+            renderComments(msgid, result.data);
+            renderCommentPagination(msgid, result.totalPages, page);
+            window[`commentTotalPages-${msgid}`] = result.totalPages;
         }
         
         function renderComments(msgid, comments) {

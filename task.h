@@ -62,6 +62,11 @@ private:
     std::string m_version;
     std::unordered_map<std::string, std::string> m_headers;//请求体哈希表
     std::string m_body;//主体体
+    // int m_totlen = 0;
+    // int m_curlen = 0;
+    // int m_reqlen = 0;
+    // bool m_head = false;
+    // std::string m_recvMsg;
 };
 
 class writeTask : public Task

@@ -27,90 +27,15 @@ void ListenTask::process()
 
 void readTask::process()
 {
-    // char buf[2048]{};
-    // std::string recvMsg;
-    // int totlen = 0;
-    // int curlen = 0;
-    // bool head = false;
+    char buf[16384]{};
  
-    // while (1)//图片等大数据报文要循环接收才能完整
-    // {
-    //     int ret = recv(m_fd, buf, sizeof(buf), 0);
-    //     if (ret < 0)
-    //     {
-    //         if (errno == EAGAIN || errno == EWOULDBLOCK)
-    //         {
-    //             // 非阻塞状态，暂时无数据到达
-    //             addWaitFd(m_epoll, m_fd);
-    //             return;
-    //         }
-    //         deletWaitFd(m_epoll, m_fd);
-    //         close(m_fd);
-    //         delete this;
-    //         return;
-    //     }
-    //     else if (ret == 0)
-    //     {
-    //         // 客户端主动断开连接
-    //         deletWaitFd(m_epoll, m_fd);
-    //         close(m_fd);
-    //         delete this;
-    //         return;
-    //     }
-    //     // std::cout<<buf<<std::endl;
-    //     recvMsg.append(buf,ret);
-    //     curlen+=ret;
-    //     if (!head)
-    //     {
-    //         int index = recvMsg.find("Content-Length: ");
-    //         if(index!=std::string::npos)
-    //         {
-    //             index+=16;
-    //             int endpos = recvMsg.find("\r\n",index);
-    //             totlen = std::stoi(recvMsg.substr(index,endpos-index));
-    //         }
-    //         else
-    //         {
-    //             totlen = curlen;
-    //         }
-    //          int ct_pos = recvMsg.find("Content-Type: multipart/form-data; boundary=");
-    //         if (ct_pos != std::string::npos)
-    //         {
-    //             ct_pos += 44; // 跳过"Content-Type: multipart/form-data; boundary="
-    //             int ct_end = recvMsg.find("\r\n", ct_pos);
-    //             m_headers["boundary"] = recvMsg.substr(ct_pos, ct_end - ct_pos); // 提前设置boundary
-    //             std::cout<< m_headers["boundary"] <<std::endl;
-    //         }
-    //         head = true;
-    //     }
-    //     if (recvMsg.find("multipart/form-data") != std::string::npos)
-    //     {
-    //         std::string boundary = m_headers["boundary"];
-    //         std::string end_boundary = "--" + boundary + "--";
-    //         if (recvMsg.find(end_boundary) != std::string::npos)
-    //         {
-    //             break; // 找到结束边界
-    //         }
-    //     }
-        
-    //     if (head && curlen >= totlen)
-    //     {
-    //         break; // 普通表单数据，根据 Content-Length 判断
-    //     }
-    // }
-
-    // // if(recvMsg.size()<300)std::cout << "buf:" << recvMsg << std::endl;
-    // // std::cout<<"buf:"<<recvMsg.substr(0,300)<<std::endl;
-    // handle(recvMsg);
-    // delete this;
-
-    char buf[1024]{};
-    std::string recvMsg;
     int totlen = 0;
     int curlen = 0;
+    int reqlen = 0;
     bool head = false;
-    
-    while (1)
+    std::string recvMsg;
+
+    while (1)//图片等大数据报文要循环接收才能完整
     {
         int ret = recv(m_fd, buf, sizeof(buf), 0);
         if (ret < 0)
@@ -118,7 +43,6 @@ void readTask::process()
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 // 非阻塞状态，暂时无数据到达
-                addWaitFd(m_epoll, m_fd);
                 return;
             }
             deletWaitFd(m_epoll, m_fd);
@@ -134,46 +58,52 @@ void readTask::process()
             delete this;
             return;
         }
-        
-        recvMsg.append(buf, ret);
-        curlen += ret;
-        
+        // std::cout<<buf<<std::endl;
+        recvMsg.append(buf,ret);
+        std::cout<<"msgsize:"<<recvMsg.size()<<std::endl;
+        curlen+=ret;
+        std::cout<<"curlen="<<curlen<<std::endl;
         if (!head)
         {
-            int index = recvMsg.find("Content-Length: ");
-            if(index != std::string::npos)
+            size_t index = recvMsg.find("\r\n\r\n");
+            if(index!=std::string::npos)
             {
-                index += 16;
-                int endpos = recvMsg.find("\r\n", index);
-                if (endpos != std::string::npos)
-                {
-                    totlen = std::stoi(recvMsg.substr(index, endpos-index));
-                    std::cout << "检测到Content-Length: " << totlen << std::endl;
-                    head = true;
-                }
+                reqlen = index+4;
+                std::cout<<"第一次消息："<<buf<<std::endl;
+                std::cout<<"reqlen="<<reqlen<<std::endl;
+            }
+            index = recvMsg.find("Content-Length: ");
+            if(index!=std::string::npos)
+            {
+                index+=16;
+                int endpos = recvMsg.find("\r\n",index);
+                totlen = std::stoi(recvMsg.substr(index,endpos-index));
+                std::cout<<"totlen="<<totlen<<std::endl;
             }
             else
             {
-                // 检查是否已经收到完整头部（没有消息体的请求）
-                int header_end = recvMsg.find("\r\n\r\n");
-                if (header_end != std::string::npos)
-                {
-                    // 头部结束，没有消息体，直接处理
-                    break;
-                }
+                totlen = curlen-reqlen;
             }
+            
+            head = true;
         }
-        
-        if(head && curlen >= totlen)
+
+        if (head && curlen >= totlen+reqlen)
         {
-            break;
+            break; // 普通表单数据，根据 Content-Length 判断
         }
-        
-        memset(buf, 0, sizeof(buf));
     }
-    
-    std::cout << "成功接收数据，长度: " << recvMsg.size() << std::endl;
+
+    // if(recvMsg.size()<300)std::cout << "buf:" << recvMsg << std::endl;
+    // std::cout<<"buf:"<<recvMsg.substr(0,300)<<std::endl;
     handle(recvMsg);
+
+    // recvMsg.clear();
+    // curlen = 0;
+    // totlen = 0;
+    // reqlen = 0;
+    // head = false;
+
     delete this;
 }
 
@@ -191,120 +121,6 @@ void readTask::handle(std::string recvMsg)
     {"username":"admin","password":"123456","remember":true}\r\n*/
 
     // 当前位置
-    // size_t pos = 0;
-    // // 拆分请求行
-    // size_t index = recvMsg.find("\r\n", 0);
-    // std::string request_line = recvMsg.substr(0, index);
-    // std::istringstream iss(request_line);
-    // iss >> m_method;
-    // iss >> m_path;
-    // iss >> m_version; // 该变量在该项目中没有作用
-    // while (1)
-    // {
-    //     pos = index + 2;
-    //     index = recvMsg.find("\r\n", pos);
-    //     if (index == pos)
-    //         break; // 检测到空行退出
-    //     std::string tmp = recvMsg.substr(pos, index - pos);
-    //     // std::string bound = "Content-Type: multipart/form-data; boundary=";
-    //     // if(tmp.substr(0,bound.size())==bound)
-    //     // {
-    //     //     m_headers["boundary"] = tmp.substr(bound.size());
-    //     // }
-    //     size_t colon = tmp.find(": ", 0); // 查找冒号
-    //     std::string key = tmp.substr(0, colon);
-    //     std::string value = tmp.substr(colon + 2);
-    //     m_headers[key] = value;
-    // }
-    // pos += 2;
-    // if (pos < recvMsg.size())
-    // {
-    //     m_body = recvMsg.substr(pos);
-    // }
-    // // TODO:后续任务分发
-    // if (m_method == "GET")
-    // {
-    //     if (m_path == "/") // 检测到首页面的get请求
-    //     {
-    //         Task *task = new writeTask(m_epoll, m_fd, 0, 0, "");
-    //         ThreadPool::addTask(task);
-    //     }
-    //     else if (m_path.substr(0, 5) == "/home")
-    //     {
-    //         Task *task = new writeTask(m_epoll, m_fd, 3, 0, "");
-    //         ThreadPool::addTask(task);
-    //     }
-    //     else if (m_path.substr(0, 4) == "/img")
-    //     {
-    //         Task *task = new writeTask(m_epoll, m_fd, 5, 0, m_path.substr(4));
-    //         ThreadPool::addTask(task);
-    //     }
-    // }
-    // else if (m_method == "POST")
-    // {
-    //     if (m_path == "/api/login") // 登录请求
-    //     {
-    //         userLogin();
-    //     }
-    //     else if (m_path == "/api/register") // 注册请求
-    //     {
-    //         userRegister();
-    //     }
-    //     else if (m_path == "/api/find")
-    //     {
-    //         findMsg();
-    //     }
-    //     else if (m_path == "/api/attention")
-    //     {
-    //         attentionMsg();
-    //     }
-    //     else if (m_path == "/api/mypost")
-    //     {
-    //         myMsg();
-    //     }
-    //     else if (m_path == "/api/publish")
-    //     {
-    //         publish();
-    //     }
-    //     else if (m_path == "/api/like")
-    //     {
-    //         addLike();
-    //     }
-    //     else if (m_path == "/api/unlike")
-    //     {
-    //         delLike();
-    //     }
-    //     else if (m_path == "/api/getcomment")
-    //     {
-    //         getComment();
-    //     }
-    //     else if (m_path == "/api/postcomment")
-    //     {
-    //         postComment();
-    //     }
-    //     else if (m_path == "/api/profilepage")
-    //     {
-    //         profilePage();
-    //     }
-    //     else if (m_path == "/api/changemsg")
-    //     {
-    //         changemsg();
-    //     }
-    //     else if (m_path == "/api/uploadavatar")
-    //     {
-    //         std::cout<<"进入上传程序"<<std::endl;
-    //         uploadavatar();
-    //     }
-    //     else if (m_path == "/api/follow")
-    //     {
-    //         setFollow();
-    //     }
-    //     else if (m_path == "/api/unfollow")
-    //     {
-    //         delFollow();
-    //     }
-    // }
-     // 当前位置
     size_t pos = 0;
     // 拆分请求行
     size_t index = recvMsg.find("\r\n", 0);
@@ -312,11 +128,7 @@ void readTask::handle(std::string recvMsg)
     std::istringstream iss(request_line);
     iss >> m_method;
     iss >> m_path;
-    iss >> m_version;
-    
-    std::cout << "处理请求: " << m_method << " " << m_path << std::endl;
-    
-    // 解析头部
+    iss >> m_version; // 该变量在该项目中没有作用
     while (1)
     {
         pos = index + 2;
@@ -324,12 +136,7 @@ void readTask::handle(std::string recvMsg)
         if (index == pos)
             break; // 检测到空行退出
         std::string tmp = recvMsg.substr(pos, index - pos);
-        std::string bound = "Content-Type: multipart/form-data; boundary=";
-        if(tmp.substr(0,bound.size())==bound)
-        {
-            m_headers["boundary"] = tmp.substr(bound.size());
-        }
-        size_t colon = tmp.find(": ", 0);
+        size_t colon = tmp.find(": ", 0); // 查找冒号
         std::string key = tmp.substr(0, colon);
         std::string value = tmp.substr(colon + 2);
         m_headers[key] = value;
@@ -339,11 +146,10 @@ void readTask::handle(std::string recvMsg)
     {
         m_body = recvMsg.substr(pos);
     }
-    
     // TODO:后续任务分发
     if (m_method == "GET")
     {
-        if (m_path == "/")
+        if (m_path == "/") // 检测到首页面的get请求
         {
             Task *task = new writeTask(m_epoll, m_fd, 0, 0, "");
             ThreadPool::addTask(task);
@@ -361,12 +167,11 @@ void readTask::handle(std::string recvMsg)
     }
     else if (m_method == "POST")
     {
-        if (m_path == "/api/login")
+        if (m_path == "/api/login") // 登录请求
         {
-            std::cout << "处理登录请求" << std::endl;
             userLogin();
         }
-        else if (m_path == "/api/register")
+        else if (m_path == "/api/register") // 注册请求
         {
             userRegister();
         }
@@ -410,9 +215,9 @@ void readTask::handle(std::string recvMsg)
         {
             changemsg();
         }
-        else if (m_path == "/api/uploadavatar")
+        else if (m_path.substr(0,17) == "/api/uploadavatar")
         {
-            std::cout << "=== 处理头像上传请求 ===" << std::endl;
+            std::cout<<"进入上传程序"<<std::endl;
             uploadavatar();
         }
         else if (m_path == "/api/follow")
@@ -869,43 +674,25 @@ void readTask::changemsg()
 void readTask::uploadavatar()
 {
     //示例报文
-//  POST /api/uploadavatar HTTP/1.1
-//  Host: 192.168.88.101:19200
-//  Connection: keep-alive
-//  Content-Length: 12345  # 总数据长度（包含所有内容）
-//  User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/142.0.0.0
-//  Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryABC123XYZ
-//  Accept: */*
-//  Origin: http://192.168.88.101:19200
-//  Referer: http://192.168.88.101:19200/home?id=2
+//     form-data解析起来有点麻烦，暂时先直接换成png了
+//     POST /api/uploadavatar?id=123456 HTTP/1.1
+//     Host: 192.168.88.101:19200
+//     User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36
+//     Accept: */*
+//     Content-Type: image/png
+//     Content-Length: 24568
+//     Connection: keep-alive
 
-    //以下是主体部分
-//  ----WebKitFormBoundaryABC123XYZ
-//  Content-Disposition: form-data; name="userid"
-
-//  2
-//  ----WebKitFormBoundaryABC123XYZ
-//  Content-Disposition: form-data; name="avatar"; filename="test.png"
-//  Content-Type: image/png
-
-//  [图片二进制数据...]
-//  ----WebKitFormBoundaryABC123XYZ--
+//     [二进制数据]
     std::cout<<"len:"<<m_body.size()<<std::endl;
-    size_t index = m_body.find("\r\n\r\n");//虽然说写法可能不怎么好，现在就先暂时这样写了
-    size_t pos = index+4;
-    index = m_body.find("\r\n",pos);
-    std::string id = m_body.substr(pos,index-pos);
-    std::cout<<"id:"<<id<<std::endl;
-    index = m_body.find("\r\n\r\n",pos);
-    pos = index+4;
-    std::string bound = "\r\n--"+m_headers["boundary"]+"--";
-    index = m_body.find(bound,pos);
-    std::string img = m_body.substr(pos,index-pos);
+    size_t index = m_path.find("?id=");
+    std::string id = m_path.substr(index+4);
+    std::cout<<"id="<<id<<std::endl;
 
     std::string filename = "/img/user"+id+".png";
     std::ofstream ofs("."+filename,std::ios::binary);
     if(!ofs.is_open())std::cout<<"打开失败"<<std::endl;
-    ofs.write(img.data(),img.size());
+    ofs.write(m_body.data(),m_body.size());
     ofs.close();
 
     std::string sql = "UPDATE User SET headimg = '"+filename+"' WHERE id = "+id+";";
@@ -970,7 +757,7 @@ void writeTask::process()
 
 void writeTask::sendLoginHtml()
 {
-    std::ifstream ifs("entry.html", std::ios::binary);
+    std::ifstream ifs("../entry.html", std::ios::binary);
     // 将整个文件内容读入到string中
     std::string htmlcontent(std::istreambuf_iterator<char>(ifs), {}); // 两个参数分别为创建迭代器，默认迭代器
     ifs.close();
@@ -1061,7 +848,7 @@ setTimeout(() => {
 
 void writeTask::sendMainHtml()
 {
-    std::ifstream ifs("mainedge.html", std::ios::binary);
+    std::ifstream ifs("../mainedge.html", std::ios::binary);
     // 将整个文件内容读入到string中
     std::string htmlcontent(std::istreambuf_iterator<char>(ifs), {}); // 两个参数分别为创建迭代器，默认迭代器
     ifs.close();
@@ -1082,7 +869,14 @@ void writeTask::sendBackMsg()
 
 void writeTask::sendImg()
 {
-    std::string path = "./img" + m_msg; // 注意相对路径
+    std::string clean_path = m_msg;
+    size_t query_pos = clean_path.find("?");
+    if (query_pos != std::string::npos) {
+        clean_path = clean_path.substr(0, query_pos);
+    }
+    
+    std::string path = "../img" + clean_path;
+    // std::string path = "./img" + m_msg; // 注意相对路径
 
     std::ifstream file(path, std::ios::binary); // 二进制方式读取图片
     // 读取文件内容到字符串
